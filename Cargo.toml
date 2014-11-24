@@ -1,0 +1,9 @@
+[package]
+
+name = "carrier"
+version = "0.0.1"
+authors = [ "Pierre Baillet <pierre@baillet.name>" ]
+
+[[bin]]
+
+name = "carrier"
