@@ -7,3 +7,8 @@ authors = [ "Pierre Baillet <pierre@baillet.name>" ]
 [[bin]]
 
 name = "carrier"
+
+[lib]
+name = "fsevent"
+test = false
+doc = true
