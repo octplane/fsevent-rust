@@ -64,6 +64,33 @@ fn main() {
     }
 
 
-    println!("k:{}", fsevent::kCFTypeArrayCallBacks);
+    unsafe {
+        let path = "src/bin/cargo.toml";
+        let cp = path.to_c_str();
+        let mut url = fsevent::CFURLCreateFromFileSystemRepresentation(fsevent::MNULL, cp.as_ptr(), cp.len() as i64, false);
+        let mut placeholder = fsevent::CFURLCopyAbsoluteURL(url);
+        fsevent::CFRelease(url);
+
+
+        let mut imaginary: fsevent::CFMutableArrayRef = fsevent::MNULL;
+
+        while !fsevent::CFURLResourceIsReachable(placeholder, fsevent::MNULL) {
+
+            if imaginary == fsevent::MNULL {
+                imaginary = fsevent::CFArrayCreateMutable(fsevent::MNULL, 0, fsevent::kCFTypeArrayCallBacks);
+            }
+
+            let child = fsevent::CFURLCopyLastPathComponent(placeholder);
+            fsevent::CFArrayInsertValueAtIndex(imaginary, 0, child);
+            fsevent::CFRelease(child);
+
+            url = fsevent::CFURLCreateCopyDeletingLastPathComponent(fsevent::MNULL, placeholder);
+            fsevent::CFRelease(placeholder);
+            placeholder = url;
+        }
+        println!("Found !");
+        fsevent::CFShow(placeholder);
+
+    }
 }
 

@@ -1,5 +1,7 @@
 extern crate libc;
 
+use std::ptr;
+
 pub type UInt32 = libc::c_uint;
 pub type SInt16 = libc::c_short;
 pub type SInt32 = libc::c_int;
@@ -23,10 +25,37 @@ pub const kFSEventStreamCreateFlagNoDefer: libc::c_long = 0x00000002;
 pub const kFSEventStreamCreateFlagWatchRoot: libc::c_long = 0x00000004;
 
 
+pub type CFRef = *mut libc::c_void;
+
+pub type CFIndex = libc::c_long;
+
+pub type CFMutableArrayRef = CFRef;
+pub type CFURLRef = CFRef;
+pub type CFErrorRef = CFRef;
+pub const MNULL: CFRef = 0 as *mut libc::c_void;
+
+//  CFURLRef url = CFURLCreateFromFileSystemRepresentation(NULL, (const UInt8*)path, (CFIndex)strlen(path), false);
+// CFURLRef placeholder = CFURLCopyAbsoluteURL(url);
+// CFRelease(url);
+
+
 #[link(name = "CoreServices", kind = "framework")]
 extern "C" {
     pub fn Gestalt(selector: OSType, response: *const SInt32) -> OSErr;
     pub static kCFTypeArrayCallBacks: *mut libc::c_void;
+    pub fn CFRelease(res: CFRef);
+    pub fn CFShow(res: CFRef);
+
+    
+    pub fn CFArrayCreateMutable(allocator: *mut libc::c_void, capacity: CFIndex, callbacks: *mut libc::c_void ) -> CFMutableArrayRef;
+    pub fn CFArrayInsertValueAtIndex(arr: CFMutableArrayRef, position: CFIndex, element: CFRef);
+    
+    pub fn CFURLCreateFromFileSystemRepresentation(allocator: CFRef, path: *const libc::c_char, len: CFIndex, is_directory: bool) -> CFURLRef;
+    pub fn CFURLCopyAbsoluteURL(res: CFURLRef) -> CFURLRef;
+    pub fn CFURLCopyLastPathComponent(res: CFURLRef) -> CFURLRef;
+    pub fn CFURLCreateCopyDeletingLastPathComponent(allocator: CFRef, url: CFURLRef) -> CFURLRef;
+
+    pub fn CFURLResourceIsReachable(res: CFURLRef, err: CFErrorRef) -> bool;
 }
 
 pub fn system_version_major() -> SInt32 {
@@ -74,3 +103,4 @@ pub fn is_api_available() -> (bool, String) {
 	}
 	return (true, "ok".to_string());
 }
+
