@@ -1,3 +1,4 @@
+#![allow(non_upper_case_globals, non_camel_case_types)]
 extern crate libc;
 
 use std::ptr;
@@ -10,18 +11,12 @@ pub type FourCharCode = UInt32;
 pub type OSType = FourCharCode;
 pub type OSErr = SInt16;
 
-#[repr(C)]
 pub const gestaltSystemVersion: libc::c_uint = 1937339254;
-#[repr(C)]
 pub const gestaltSystemVersionMajor: libc::c_uint = 1937339185;
-#[repr(C)]
 pub const gestaltSystemVersionMinor: libc::c_uint = 1937339186;
-#[repr(C)]
 pub const gestaltSystemVersionBugFix: libc::c_uint = 1937339187;
 
-#[repr(C)]
 pub const kFSEventStreamCreateFlagNoDefer: libc::c_long = 0x00000002;
-#[repr(C)]
 pub const kFSEventStreamCreateFlagWatchRoot: libc::c_long = 0x00000004;
 
 
@@ -32,6 +27,7 @@ pub type CFIndex = libc::c_long;
 pub type CFMutableArrayRef = CFRef;
 pub type CFURLRef = CFRef;
 pub type CFErrorRef = CFRef;
+pub type CFStringRef = CFRef;
 pub const MNULL: CFRef = 0 as *mut libc::c_void;
 
 //  CFURLRef url = CFURLCreateFromFileSystemRepresentation(NULL, (const UInt8*)path, (CFIndex)strlen(path), false);
@@ -49,13 +45,16 @@ extern "C" {
     
     pub fn CFArrayCreateMutable(allocator: *mut libc::c_void, capacity: CFIndex, callbacks: *mut libc::c_void ) -> CFMutableArrayRef;
     pub fn CFArrayInsertValueAtIndex(arr: CFMutableArrayRef, position: CFIndex, element: CFRef);
+    pub fn CFArrayGetCount(arr: CFMutableArrayRef) -> CFIndex;
+    pub fn CFArrayGetValueAtIndex(arr: CFMutableArrayRef, index: CFIndex) -> CFStringRef;
     
-
-    pub fn CFURLCreateFileReferenceURL(allocator: CFRef, url: CFURLRef) -> CFURLRef;
+    pub fn CFURLCreateFileReferenceURL(allocator: CFRef, url: CFURLRef, err: CFRef) -> CFURLRef;
+    pub fn CFURLCreateFilePathURL(allocator: CFRef, url: CFURLRef, err: CFRef) ->CFURLRef;
     pub fn CFURLCreateFromFileSystemRepresentation(allocator: CFRef, path: *const libc::c_char, len: CFIndex, is_directory: bool) -> CFURLRef;
     pub fn CFURLCopyAbsoluteURL(res: CFURLRef) -> CFURLRef;
     pub fn CFURLCopyLastPathComponent(res: CFURLRef) -> CFURLRef;
     pub fn CFURLCreateCopyDeletingLastPathComponent(allocator: CFRef, url: CFURLRef) -> CFURLRef;
+    pub fn CFURLCreateCopyAppendingPathComponent(allocation: CFRef, url: CFURLRef, path: CFStringRef, is_directory: bool) -> CFURLRef;
 
     pub fn CFURLResourceIsReachable(res: CFURLRef, err: CFErrorRef) -> bool;
 }

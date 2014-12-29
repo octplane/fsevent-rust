@@ -1,6 +1,8 @@
 #![feature(phase)]
 #![feature(globs)]
 #![feature(link_args)]
+#![allow(unused_variables)]
+
 
 #[phase(plugin, link)] extern crate log;
 
@@ -9,7 +11,6 @@ extern crate libc;
 extern crate fsevent;
 
 
-use std::c_str::CString;
 use getopts::{optopt,getopts,OptGroup};
 use std::os;
 
@@ -18,11 +19,6 @@ fn print_usage(program: &str, _opts: &[OptGroup]) {
     println!("-p path\t\tPath to observe (default: .)");
     println!("-c command\t\tCommand to run (default: cargo build)");
     println!("-h --help\tUsage");
-}
-
-extern fn callback(arg1: libc::c_int, arg2: libc::c_int)-> libc::c_int {
-    println!("I'm called from C with value {0}", arg1);
-    return 0;
 }
 
 fn main() {
@@ -67,7 +63,7 @@ fn main() {
     add("./src/pipo");
 }
 
-
+// https://github.com/thibaudgg/rb-fsevent/blob/master/ext/fsevent_watch/main.c
 fn add(source: &str) {
     let cp = source.to_c_str();
     unsafe {
@@ -85,6 +81,8 @@ fn add(source: &str) {
             }
 
             let child = fsevent::CFURLCopyLastPathComponent(placeholder);
+            println!("Appending to array");
+            fsevent::CFShow(child);
             fsevent::CFArrayInsertValueAtIndex(imaginary, 0, child);
             fsevent::CFRelease(child);
 
@@ -92,6 +90,25 @@ fn add(source: &str) {
             fsevent::CFRelease(placeholder);
             placeholder = url;
         }
+        url = fsevent::CFURLCreateFileReferenceURL(fsevent::MNULL, placeholder, fsevent::MNULL);
+        fsevent::CFRelease(placeholder);
+        placeholder = fsevent::CFURLCreateFilePathURL(fsevent::MNULL, url, fsevent::MNULL);
+        fsevent::CFRelease(url);
 
-    }    
+        if imaginary != fsevent::MNULL {
+            let mut count = fsevent::CFArrayGetCount(imaginary);
+            while { count > 0 }
+            {
+                let component = fsevent::CFArrayGetValueAtIndex(imaginary, count);
+                fsevent::CFShow(component);
+                url = fsevent::CFURLCreateCopyAppendingPathComponent(fsevent::MNULL, placeholder, component, false);
+                fsevent::CFRelease(placeholder);
+                placeholder = url;
+                count = count - 1;
+            }
+            fsevent::CFRelease(imaginary);
+        }
+
+        fsevent::CFShow(placeholder);
+    }
 }
