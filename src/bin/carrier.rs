@@ -64,9 +64,13 @@ fn main() {
     }
 
 
+    add("./src/pipo");
+}
+
+
+fn add(source: &str) {
+    let cp = source.to_c_str();
     unsafe {
-        let path = "src/bin/cargo.toml";
-        let cp = path.to_c_str();
         let mut url = fsevent::CFURLCreateFromFileSystemRepresentation(fsevent::MNULL, cp.as_ptr(), cp.len() as i64, false);
         let mut placeholder = fsevent::CFURLCopyAbsoluteURL(url);
         fsevent::CFRelease(url);
@@ -88,9 +92,6 @@ fn main() {
             fsevent::CFRelease(placeholder);
             placeholder = url;
         }
-        println!("Found !");
-        fsevent::CFShow(placeholder);
 
-    }
+    }    
 }
-

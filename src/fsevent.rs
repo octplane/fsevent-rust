@@ -50,6 +50,8 @@ extern "C" {
     pub fn CFArrayCreateMutable(allocator: *mut libc::c_void, capacity: CFIndex, callbacks: *mut libc::c_void ) -> CFMutableArrayRef;
     pub fn CFArrayInsertValueAtIndex(arr: CFMutableArrayRef, position: CFIndex, element: CFRef);
     
+
+    pub fn CFURLCreateFileReferenceURL(allocator: CFRef, url: CFURLRef) -> CFURLRef;
     pub fn CFURLCreateFromFileSystemRepresentation(allocator: CFRef, path: *const libc::c_char, len: CFIndex, is_directory: bool) -> CFURLRef;
     pub fn CFURLCopyAbsoluteURL(res: CFURLRef) -> CFURLRef;
     pub fn CFURLCopyLastPathComponent(res: CFURLRef) -> CFURLRef;
