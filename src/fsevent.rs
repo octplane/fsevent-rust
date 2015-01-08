@@ -26,7 +26,8 @@ pub type CFMutableArrayRef = CFRef;
 pub type CFURLRef = CFRef;
 pub type CFErrorRef = CFRef;
 pub type CFStringRef = CFRef;
-pub const MNULL: CFRef = 0 as *mut libc::c_void;
+pub const NULL: CFRef = 0 as *mut libc::c_void;
+pub const kCFAllocatorDefault: CFRef = NULL;
 
 pub type CFURLPathStyle = libc::c_uint;
 
@@ -47,7 +48,17 @@ pub struct CFArrayCallBacks {
    cp: CFRef,
    equal: CFRef,
 }
+impl Copy for CFArrayCallBacks { }
 
+
+#[repr(C)]
+pub struct FSEventStreamContext {
+   pub version: CFIndex,
+   pub info: CFRef,
+   pub retain: CFRef,
+   pub copy_description: CFRef,
+}
+impl Copy for FSEventStreamContext { }
 
 #[link(name = "CoreServices", kind = "framework")]
 extern "C" {
