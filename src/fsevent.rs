@@ -14,13 +14,12 @@ pub const gestaltSystemVersionMajor: libc::c_uint = 1937339185;
 pub const gestaltSystemVersionMinor: libc::c_uint = 1937339186;
 pub const gestaltSystemVersionBugFix: libc::c_uint = 1937339187;
 
-pub const kFSEventStreamCreateFlagNoDefer: libc::c_long = 0x00000002;
-pub const kFSEventStreamCreateFlagWatchRoot: libc::c_long = 0x00000004;
 
 
 pub type CFRef = *mut libc::c_void;
 
 pub type CFIndex = libc::c_long;
+pub type CFTimeInterval = f64;
 
 pub type CFMutableArrayRef = CFRef;
 pub type CFURLRef = CFRef;
@@ -28,16 +27,10 @@ pub type CFErrorRef = CFRef;
 pub type CFStringRef = CFRef;
 pub const NULL: CFRef = 0 as *mut libc::c_void;
 pub const kCFAllocatorDefault: CFRef = NULL;
-
 pub type CFURLPathStyle = libc::c_uint;
-
 pub const kCFURLPOSIXPathStyle: CFURLPathStyle = 0;
 pub const kCFURLHFSPathStyle: CFURLPathStyle = 1;
 pub const kCFURLWindowsPathStyle: CFURLPathStyle = 2;
-
-//  CFURLRef url = CFURLCreateFromFileSystemRepresentation(NULL, (const UInt8*)path, (CFIndex)strlen(path), false);
-// CFURLRef placeholder = CFURLCopyAbsoluteURL(url);
-// CFRelease(url);
 
 
 #[repr(C)]
@@ -51,15 +44,6 @@ pub struct CFArrayCallBacks {
 impl Copy for CFArrayCallBacks { }
 
 
-#[repr(C)]
-pub struct FSEventStreamContext {
-   pub version: CFIndex,
-   pub info: CFRef,
-   pub retain: CFRef,
-   pub copy_description: CFRef,
-}
-impl Copy for FSEventStreamContext { }
-
 #[link(name = "CoreServices", kind = "framework")]
 extern "C" {
     pub static kCFTypeArrayCallBacks: CFArrayCallBacks;
@@ -68,7 +52,7 @@ extern "C" {
     pub fn CFRelease(res: CFRef);
     pub fn CFShow(res: CFRef);
 
-    pub fn CFArrayCreateMutable(allocator: *mut libc::c_void, capacity: CFIndex, callbacks: *const CFArrayCallBacks) -> CFMutableArrayRef;
+    pub fn CFArrayCreateMutable(allocator: CFRef, capacity: CFIndex, callbacks: *const CFArrayCallBacks) -> CFMutableArrayRef;
     pub fn CFArrayInsertValueAtIndex(arr: CFMutableArrayRef, position: CFIndex, element: CFRef);
     pub fn CFArrayAppendValue(aff: CFMutableArrayRef, element: CFRef);
     pub fn CFArrayGetCount(arr: CFMutableArrayRef) -> CFIndex;
@@ -85,6 +69,51 @@ extern "C" {
 
     pub fn CFURLResourceIsReachable(res: CFURLRef, err: CFErrorRef) -> bool;
 }
+
+pub const kFSEventStreamCreateFlagNoDefer: libc::c_long = 0x00000002;
+pub const kFSEventStreamCreateFlagWatchRoot: libc::c_long = 0x00000004;
+
+pub type FSEventStreamCreateFlags = u32;
+pub type FSEventStreamEventFlags = u32;
+pub type FSEventStreamRef = *mut libc::c_void;
+pub type FSEventStreamCallback = extern "C" fn(FSEventStreamRef,
+	*mut libc::c_void, // ConstFSEventStreamRef streamRef
+	libc::size_t,      // size_t numEvents
+	*mut libc::c_void, // void *eventPaths
+	*mut libc::c_void, // const FSEventStreamEventFlags eventFlags[]
+	*mut libc::c_void,  // const FSEventStreamEventId eventIds[]
+);
+
+
+#[repr(C)]
+pub struct FSEventStreamContext {
+   pub version: CFIndex,
+   pub info: CFRef,
+   pub retain: CFRef,
+   pub copy_description: CFRef,
+}
+
+impl Copy for FSEventStreamContext { }
+pub const kFSEventStreamEventIdSinceNow: FSEventStreamEventId = 0xFFFFFFFFFFFFFFFF;
+
+pub type FSEventStreamEventId = u64;
+
+#[link(name = "CoreServices", kind = "framework")]
+extern "C" {
+    // pub static kFSEventStreamEventIdSinceNow: FSEventStreamEventId;
+
+	pub fn FSEventStreamCreate(
+		allocator: CFRef,
+		callback: *const FSEventStreamCallback,
+		context: *const FSEventStreamContext,
+		pathsToWatch: CFMutableArrayRef,
+		sinceWhen: FSEventStreamEventId,
+		latency: CFTimeInterval,
+		flags: FSEventStreamCreateFlags ) -> FSEventStreamRef;
+
+}
+
+
 
 pub fn system_version_major() -> SInt32 {
 	unsafe {

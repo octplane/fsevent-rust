@@ -61,7 +61,12 @@ fn main() {
     }
     let fsevent: FsEvent;
     unsafe {
-        fsevent = FsEvent{paths: fsevent::CFArrayCreateMutable(fsevent::kCFAllocatorDefault, 0, &fsevent::kCFTypeArrayCallBacks)};
+        fsevent = FsEvent{
+            paths: fsevent::CFArrayCreateMutable(fsevent::kCFAllocatorDefault, 0, &fsevent::kCFTypeArrayCallBacks),
+            since_when: fsevent::kFSEventStreamEventIdSinceNow,
+            latency: 0.1,
+//            flags: fsevent::kFSEventStreamCreateFlagNone,
+        };
     }
 
     fsevent.add("./src/temp/build/pipo");
@@ -70,10 +75,21 @@ fn main() {
         info: fsevent::NULL,
         retain: fsevent::NULL,
         copy_description: fsevent::NULL };
+
+    // let stream = FSEventStreamCreate(kCFAllocatorDefault,
+    //    (FSEventStreamCallback)&callback,
+    //    &stream_context,
+    //    config.paths,
+    //    config.sinceWhen,
+    //    config.latency,
+    //    config.flags);
 }
 
 struct FsEvent {
     paths: fsevent::CFMutableArrayRef,
+    since_when: fsevent::FSEventStreamEventId,
+    latency: fsevent::CFTimeInterval,
+//    flags: fsevent::FSEventStreamCreateFlags,
 }
 
 impl FsEvent {
