@@ -1,4 +1,5 @@
 extern crate "fsevent-sys" as fsevent;
+extern crate libc;
 
 use fsevent::core_foundation as cf;
 use fsevent::fsevent as fs;
@@ -7,10 +8,10 @@ use std::ffi::CString;
 pub const NULL: cf::CFRef = cf::NULL;
 
 pub struct FsEvent {
-    paths: cf::CFMutableArrayRef,
-    since_when: fs::FSEventStreamEventId,
-    latency: cf::CFTimeInterval,
-//    flags: fsevent::FSEventStreamCreateFlags,
+  paths: cf::CFMutableArrayRef,
+  since_when: fs::FSEventStreamEventId,
+  latency: cf::CFTimeInterval,
+  flags: fs::FSEventStreamCreateFlags,
 }
 
 pub fn is_api_available() -> (bool, String) {
@@ -24,82 +25,110 @@ pub fn is_api_available() -> (bool, String) {
 }
 
 pub fn default_fsevent() -> FsEvent {
-    let fsevent: FsEvent;
-    unsafe {
-        fsevent = FsEvent{
-            paths: cf::CFArrayCreateMutable(cf::kCFAllocatorDefault, 0, &cf::kCFTypeArrayCallBacks),
-            since_when: fs::kFSEventStreamEventIdSinceNow,
-            latency: 0.1,
-//            flags: fsevent::kFSEventStreamCreateFlagNone,
-        };
-    }
-    fsevent
+  let fsevent: FsEvent;
+  unsafe {
+    fsevent = FsEvent{
+      paths: cf::CFArrayCreateMutable(cf::kCFAllocatorDefault, 0, &cf::kCFTypeArrayCallBacks),
+      since_when: fs::kFSEventStreamEventIdSinceNow,
+      latency: 0.1,
+      flags: fs::kFSEventStreamCreateFlagNone,
+    };
+  }
+  fsevent
 }
 
 fn default_stream_context() -> fs::FSEventStreamContext {
-    let stream_context = fs::FSEventStreamContext{
+  let stream_context = fs::FSEventStreamContext{
     version: 0,
     info: cf::NULL,
     retain: cf::NULL,
     copy_description: cf::NULL };
 
-    stream_context
+  stream_context
 }
 
 
 impl FsEvent {
 
-    // https://github.com/thibaudgg/rb-fsevent/blob/master/ext/fsevent_watch/main.c
-    pub fn append_path(&self,source: &str) {
-        unsafe {
-            let cp = CString::from_slice(source.as_bytes());
-            let c_path = cp.as_slice_with_nul();
-            let mut url = cf::CFURLCreateFromFileSystemRepresentation(cf::kCFAllocatorDefault, c_path.as_ptr(), c_path.len() as i64, false);
-            let mut placeholder = cf::CFURLCopyAbsoluteURL(url);
-            cf::CFRelease(url);
+  // https://github.com/thibaudgg/rb-fsevent/blob/master/ext/fsevent_watch/main.c
+  pub fn append_path(&self,source: &str) {
+    unsafe {
+      let cp = CString::from_slice(source.as_bytes());
+      let c_path = cp.as_slice_with_nul();
+      let mut url = cf::CFURLCreateFromFileSystemRepresentation(cf::kCFAllocatorDefault, c_path.as_ptr(), c_path.len() as i64, false);
+      let mut placeholder = cf::CFURLCopyAbsoluteURL(url);
+      cf::CFRelease(url);
 
-            let imaginary: cf::CFRef = cf::CFArrayCreateMutable(cf::kCFAllocatorDefault, 0, &cf::kCFTypeArrayCallBacks);
+      let imaginary: cf::CFRef = cf::CFArrayCreateMutable(cf::kCFAllocatorDefault, 0, &cf::kCFTypeArrayCallBacks);
 
-            while !cf::CFURLResourceIsReachable(placeholder, cf::kCFAllocatorDefault) {
+      while !cf::CFURLResourceIsReachable(placeholder, cf::kCFAllocatorDefault) {
 
-                let child = cf::CFURLCopyLastPathComponent(placeholder);
-                cf::CFArrayInsertValueAtIndex(imaginary, 0, child);
-                cf::CFRelease(child);
+        let child = cf::CFURLCopyLastPathComponent(placeholder);
+        cf::CFArrayInsertValueAtIndex(imaginary, 0, child);
+        cf::CFRelease(child);
 
-                url = cf::CFURLCreateCopyDeletingLastPathComponent(cf::kCFAllocatorDefault, placeholder);
-                cf::CFRelease(placeholder);
-                placeholder = url;
-            }
+        url = cf::CFURLCreateCopyDeletingLastPathComponent(cf::kCFAllocatorDefault, placeholder);
+        cf::CFRelease(placeholder);
+        placeholder = url;
+      }
 
-            url = cf::CFURLCreateFileReferenceURL(cf::kCFAllocatorDefault, placeholder, cf::kCFAllocatorDefault);
-            cf::CFRelease(placeholder);
-            placeholder = cf::CFURLCreateFilePathURL(cf::kCFAllocatorDefault, url, cf::kCFAllocatorDefault);
-            cf::CFRelease(url);
+      url = cf::CFURLCreateFileReferenceURL(cf::kCFAllocatorDefault, placeholder, cf::kCFAllocatorDefault);
+      cf::CFRelease(placeholder);
+      placeholder = cf::CFURLCreateFilePathURL(cf::kCFAllocatorDefault, url, cf::kCFAllocatorDefault);
+      cf::CFRelease(url);
 
-            cf::CFShow(imaginary);
-            let component = cf::CFArrayGetValueAtIndex(imaginary, 1) as cf::CFStringRef;
-            cf::CFShow(component);
-
-
-            if imaginary != cf::kCFAllocatorDefault {
-                let mut count =  0;
-                while { count < cf::CFArrayGetCount(imaginary) }
-                {
-                    let component = cf::CFArrayGetValueAtIndex(imaginary, count);
-                    cf::CFShow(component);
-                    url = cf::CFURLCreateCopyAppendingPathComponent(cf::kCFAllocatorDefault, placeholder, component, false);
-                    cf::CFRelease(placeholder);
-                    placeholder = url;
-                    count = count + 1;
-                }
-                cf::CFRelease(imaginary);
-            }
+      cf::CFShow(imaginary);
+      let component = cf::CFArrayGetValueAtIndex(imaginary, 1) as cf::CFStringRef;
+      cf::CFShow(component);
 
 
-            let cf_path = cf::CFURLCopyFileSystemPath(placeholder, cf::kCFURLPOSIXPathStyle);
-            cf::CFArrayAppendValue(self.paths, cf_path);
-            cf::CFRelease(cf_path);
-            cf::CFRelease(placeholder);
+      if imaginary != cf::kCFAllocatorDefault {
+        let mut count =  0;
+        while { count < cf::CFArrayGetCount(imaginary) }
+        {
+          let component = cf::CFArrayGetValueAtIndex(imaginary, count);
+          cf::CFShow(component);
+          url = cf::CFURLCreateCopyAppendingPathComponent(cf::kCFAllocatorDefault, placeholder, component, false);
+          cf::CFRelease(placeholder);
+          placeholder = url;
+          count = count + 1;
         }
+        cf::CFRelease(imaginary);
+      }
+
+
+      let cf_path = cf::CFURLCopyFileSystemPath(placeholder, cf::kCFURLPOSIXPathStyle);
+      cf::CFArrayAppendValue(self.paths, cf_path);
+      cf::CFRelease(cf_path);
+      cf::CFRelease(placeholder);
     }
+  }
+  pub fn observe(&self) {
+    let config = default_fsevent();
+    let stream_context = default_stream_context();
+
+    let cb = callback as *mut _;
+
+
+    unsafe {
+      let stream = fs::FSEventStreamCreate(cf::kCFAllocatorDefault,
+       cb,
+       &stream_context,
+       config.paths,
+       config.since_when,
+       config.latency,
+       config.flags);
+    }
+  }
+}
+
+pub fn callback(
+    stream_ref: fs::FSEventStreamRef,
+    client_callback_info: *mut libc::c_void,
+    num_events: libc::size_t,      // size_t numEvents
+    event_paths: *mut libc::c_void, // void *eventPaths
+    event_flags: *mut libc::c_void, // const FSEventStreamEventFlags eventFlags[]
+    event_ids: *mut libc::c_void,  // const FSEventStreamEventId eventIds[]
+  ) {
+    println!("{}", num_events);
 }

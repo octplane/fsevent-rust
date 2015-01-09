@@ -64,12 +64,8 @@ fn main() {
 
     fsevent.append_path("./src/temp/build/pipo");
 
-    // let stream = FSEventStreamCreate(kCFAllocatorDefault,
-    //    (FSEventStreamCallback)&callback,
-    //    &stream_context,
-    //    config.paths,
-    //    config.sinceWhen,
-    //    config.latency,
-    //    config.flags);
+    fsevent.observe();
+
+
 
 }
