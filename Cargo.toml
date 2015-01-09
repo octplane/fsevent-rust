@@ -1,14 +1,18 @@
 [package]
 
-name = "carrier"
+name = "fsevent"
 version = "0.0.1"
 authors = [ "Pierre Baillet <pierre@baillet.name>" ]
 
 [[bin]]
 
-name = "carrier"
+name = "fsevent-demo"
 
 [lib]
 name = "fsevent"
 test = false
 doc = true
+
+[dependencies.fsevent-sys]
+path = "fsevent-sys"
+version = "~1.0.0"

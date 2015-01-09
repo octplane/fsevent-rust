@@ -1,4 +1,11 @@
 [root]
-name = "carrier"
+name = "fsevent"
 version = "0.0.1"
+dependencies = [
+ "fsevent-sys 1.0.0",
+]
+
+[[package]]
+name = "fsevent-sys"
+version = "1.0.0"
 

@@ -1,0 +1,8 @@
+[package]
+name = "fsevent-sys"
+version = "1.0.0"
+authors = ["Pierre Baillet <pierre@baillet.name>"]
+
+[lib]
+name = "fsevent-sys"
+path = "lib.rs"
