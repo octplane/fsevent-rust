@@ -48,6 +48,8 @@ extern "C" {
 		latency: cf::CFTimeInterval,
 		flags: FSEventStreamCreateFlags ) -> FSEventStreamRef;
 
+	pub fn FSEventStreamShow(stream_ref: FSEventStreamRef);
+
 }
 
 

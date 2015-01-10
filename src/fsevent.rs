@@ -1,3 +1,5 @@
+#![allow(unstable)]
+
 extern crate "fsevent-sys" as fsevent;
 extern crate libc;
 
@@ -13,6 +15,7 @@ pub struct FsEvent {
   latency: cf::CFTimeInterval,
   flags: fs::FSEventStreamCreateFlags,
 }
+impl Copy for FsEvent { }
 
 pub fn is_api_available() -> (bool, String) {
   let ma = cf::system_version_major();
@@ -77,17 +80,11 @@ impl FsEvent {
       placeholder = cf::CFURLCreateFilePathURL(cf::kCFAllocatorDefault, url, cf::kCFAllocatorDefault);
       cf::CFRelease(url);
 
-      cf::CFShow(imaginary);
-      let component = cf::CFArrayGetValueAtIndex(imaginary, 1) as cf::CFStringRef;
-      cf::CFShow(component);
-
-
       if imaginary != cf::kCFAllocatorDefault {
         let mut count =  0;
         while { count < cf::CFArrayGetCount(imaginary) }
         {
           let component = cf::CFArrayGetValueAtIndex(imaginary, count);
-          cf::CFShow(component);
           url = cf::CFURLCreateCopyAppendingPathComponent(cf::kCFAllocatorDefault, placeholder, component, false);
           cf::CFRelease(placeholder);
           placeholder = url;
@@ -109,7 +106,6 @@ impl FsEvent {
 
     let cb = callback as *mut _;
 
-
     unsafe {
       let stream = fs::FSEventStreamCreate(cf::kCFAllocatorDefault,
        cb,
@@ -118,6 +114,8 @@ impl FsEvent {
        config.since_when,
        config.latency,
        config.flags);
+
+      fs::FSEventStreamShow(stream);
     }
   }
 }
