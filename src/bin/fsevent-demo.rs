@@ -6,7 +6,7 @@ extern crate fsevent;
 fn main() {
     let fsevent = fsevent::FsEvent::new();
 
-    fsevent.append_path("./src/temp/build/pipo");
+    fsevent.append_path(".");
 
     fsevent.observe();
 }
