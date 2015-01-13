@@ -14,8 +14,6 @@ pub const gestaltSystemVersionMajor: libc::c_uint = 1937339185;
 pub const gestaltSystemVersionMinor: libc::c_uint = 1937339186;
 pub const gestaltSystemVersionBugFix: libc::c_uint = 1937339187;
 
-
-
 pub type CFRef = *mut libc::c_void;
 
 pub type CFIndex = libc::c_long;
@@ -25,9 +23,13 @@ pub type CFMutableArrayRef = CFRef;
 pub type CFURLRef = CFRef;
 pub type CFErrorRef = CFRef;
 pub type CFStringRef = CFRef;
+pub type CFRunLoopRef = CFRef;
+
 pub const NULL: CFRef = 0 as *mut libc::c_void;
-pub const kCFAllocatorDefault: CFRef = NULL;
+
 pub type CFURLPathStyle = libc::c_uint;
+
+pub const kCFAllocatorDefault: CFRef = NULL;
 pub const kCFURLPOSIXPathStyle: CFURLPathStyle = 0;
 pub const kCFURLHFSPathStyle: CFURLPathStyle = 1;
 pub const kCFURLWindowsPathStyle: CFURLPathStyle = 2;
@@ -47,10 +49,14 @@ impl Copy for CFArrayCallBacks { }
 #[link(name = "CoreServices", kind = "framework")]
 extern "C" {
     pub static kCFTypeArrayCallBacks: CFArrayCallBacks;
+    pub static kCFRunLoopDefaultMode: CFStringRef;
 
     pub fn Gestalt(selector: OSType, response: *const SInt32) -> OSErr;
     pub fn CFRelease(res: CFRef);
     pub fn CFShow(res: CFRef);
+
+    pub fn CFRunLoopRun();
+    pub fn CFRunLoopGetCurrent() -> CFRunLoopRef;
 
     pub fn CFArrayCreateMutable(allocator: CFRef, capacity: CFIndex, callbacks: *const CFArrayCallBacks) -> CFMutableArrayRef;
     pub fn CFArrayInsertValueAtIndex(arr: CFMutableArrayRef, position: CFIndex, element: CFRef);

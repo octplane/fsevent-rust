@@ -27,19 +27,6 @@ pub fn is_api_available() -> (bool, String) {
   return (true, "ok".to_string());
 }
 
-pub fn default_fsevent() -> FsEvent {
-  let fsevent: FsEvent;
-  unsafe {
-    fsevent = FsEvent{
-      paths: cf::CFArrayCreateMutable(cf::kCFAllocatorDefault, 0, &cf::kCFTypeArrayCallBacks),
-      since_when: fs::kFSEventStreamEventIdSinceNow,
-      latency: 0.1,
-      flags: fs::kFSEventStreamCreateFlagNone,
-    };
-  }
-  fsevent
-}
-
 fn default_stream_context() -> fs::FSEventStreamContext {
   let stream_context = fs::FSEventStreamContext{
     version: 0,
@@ -52,6 +39,18 @@ fn default_stream_context() -> fs::FSEventStreamContext {
 
 
 impl FsEvent {
+  pub fn new() -> FsEvent {
+    let fsevent: FsEvent;
+    unsafe {
+      fsevent = FsEvent{
+        paths: cf::CFArrayCreateMutable(cf::kCFAllocatorDefault, 0, &cf::kCFTypeArrayCallBacks),
+        since_when: fs::kFSEventStreamEventIdSinceNow,
+        latency: 0.1,
+        flags: fs::kFSEventStreamCreateFlagNone,
+      };
+    }
+    fsevent
+  }
 
   // https://github.com/thibaudgg/rb-fsevent/blob/master/ext/fsevent_watch/main.c
   pub fn append_path(&self,source: &str) {
@@ -101,7 +100,6 @@ impl FsEvent {
     }
   }
   pub fn observe(&self) {
-    let config = default_fsevent();
     let stream_context = default_stream_context();
 
     let cb = callback as *mut _;
@@ -110,12 +108,22 @@ impl FsEvent {
       let stream = fs::FSEventStreamCreate(cf::kCFAllocatorDefault,
        cb,
        &stream_context,
-       config.paths,
-       config.since_when,
-       config.latency,
-       config.flags);
+       self.paths,
+       self.since_when,
+       self.latency,
+       self.flags);
 
       fs::FSEventStreamShow(stream);
+
+      fs::FSEventStreamScheduleWithRunLoop(stream,
+        cf::CFRunLoopGetCurrent(),
+        cf::kCFRunLoopDefaultMode);
+
+      fs::FSEventStreamStart(stream);
+      cf::CFRunLoopRun();
+      fs::FSEventStreamFlushSync(stream);
+      fs::FSEventStreamStop(stream);
+
     }
   }
 }

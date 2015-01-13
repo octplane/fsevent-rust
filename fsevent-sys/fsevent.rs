@@ -49,7 +49,13 @@ extern "C" {
 		flags: FSEventStreamCreateFlags ) -> FSEventStreamRef;
 
 	pub fn FSEventStreamShow(stream_ref: FSEventStreamRef);
+	pub fn FSEventStreamScheduleWithRunLoop(stream_ref: FSEventStreamRef,
+		run_loop: cf::CFRunLoopRef,
+   		run_loop_mode: cf::CFStringRef);
 
+	pub fn FSEventStreamStart(stream_ref: FSEventStreamRef) -> bool;
+	pub fn FSEventStreamFlushSync(stream_ref: FSEventStreamRef);
+	pub fn FSEventStreamStop(stream_ref: FSEventStreamRef);
 }
 
 

@@ -4,7 +4,7 @@
 extern crate fsevent;
 
 fn main() {
-    let fsevent = fsevent::default_fsevent();
+    let fsevent = fsevent::FsEvent::new();
 
     fsevent.append_path("./src/temp/build/pipo");
 
