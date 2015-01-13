@@ -2,10 +2,10 @@
 name = "fsevent"
 version = "0.0.1"
 dependencies = [
- "fsevent-sys 1.0.0",
+ "fsevent-sys 0.0.1",
 ]
 
 [[package]]
 name = "fsevent-sys"
-version = "1.0.0"
+version = "0.0.1"
 

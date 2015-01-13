@@ -5,7 +5,13 @@ extern crate libc;
 
 use fsevent::core_foundation as cf;
 use fsevent::fsevent as fs;
+
 use std::ffi::CString;
+use std::mem::transmute;
+use std::slice::from_raw_mut_buf;
+use std::raw::Slice;
+use std::str::from_utf8;
+use std::ffi::c_str_to_bytes;
 
 pub const NULL: cf::CFRef = cf::NULL;
 
@@ -16,6 +22,12 @@ pub struct FsEvent {
   flags: fs::FSEventStreamCreateFlags,
 }
 impl Copy for FsEvent { }
+
+pub struct Event {
+  event_id: u64,
+  flag: u32,
+  path: String
+}
 
 pub fn is_api_available() -> (bool, String) {
   let ma = cf::system_version_major();
@@ -128,13 +140,41 @@ impl FsEvent {
   }
 }
 
+fn from_c_str<'a>(p: &'a *const libc::c_char) -> &'a str {
+    std::str::from_utf8( unsafe { std::ffi::c_str_to_bytes(p) } ).ok().expect("Found invalid utf8")
+}
+
+
 pub fn callback(
     stream_ref: fs::FSEventStreamRef,
     client_callback_info: *mut libc::c_void,
     num_events: libc::size_t,      // size_t numEvents
-    event_paths: *mut libc::c_void, // void *eventPaths
+    event_paths: *const *const libc::c_char, // void *eventPaths
     event_flags: *mut libc::c_void, // const FSEventStreamEventFlags eventFlags[]
     event_ids: *mut libc::c_void,  // const FSEventStreamEventId eventIds[]
   ) {
-    println!("{}", num_events);
+    let num = num_events as usize;
+    let e_ptr = event_flags as *mut u32;
+    let i_ptr = event_ids as *mut u64;
+
+    unsafe {
+      let paths: &[*const libc::c_char] = transmute(Slice { data: event_paths, len: num });
+      let flags = from_raw_mut_buf(&e_ptr, num);
+      let ids = from_raw_mut_buf(&i_ptr, num);
+
+      // let flags: &[u32] = transmute(Slice { data: c_flags, len: num });
+      // let ids: &[u64] = transmute(Slice { data: c_ids, len: num });
+
+      for path in paths.iter() {
+          println!("{}", from_utf8(c_str_to_bytes(path)).ok().expect("Bad UTF-8"));
+      }
+      for flag in flags.iter() {
+          println!("{}", flag);
+      }
+      for id in ids.iter() {
+          println!("{}", id);
+      }
+    }
+
+
 }

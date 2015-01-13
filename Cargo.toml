@@ -3,6 +3,9 @@
 name = "fsevent"
 version = "0.0.1"
 authors = [ "Pierre Baillet <pierre@baillet.name>" ]
+description = "Rust bindings to the fsevent-sys OSX API for file changes notifications"
+license-file = "LICENSE"
+repository = "https://github.com/octplane/fsevent-rust"
 
 [[bin]]
 
@@ -15,4 +18,4 @@ doc = true
 
 [dependencies.fsevent-sys]
 path = "fsevent-sys"
-version = "~1.0.0"
+version = "~0.0.0"

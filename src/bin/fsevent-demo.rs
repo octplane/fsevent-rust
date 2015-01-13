@@ -1,5 +1,4 @@
 #![feature(link_args)]
-#![allow(unused_variables)]
 
 extern crate fsevent;
 
