@@ -179,10 +179,8 @@ pub fn callback(
       }
 
       unsafe {
-        let fs_e = *fs_event;
-        (fs_e.callback)(events);
+        ((*fs_event).callback)(events)
       }
     }
-
 
 }
