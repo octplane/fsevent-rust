@@ -3,10 +3,7 @@ extern crate libc;
 
 use core_foundation as cf;
 
-pub type FSEventStreamCreateFlags = u32;
-pub type FSEventStreamEventFlags = u32;
 pub type FSEventStreamRef = *mut libc::c_void;
-pub type FSEventStreamEventId = u64;
 
 pub type FSEventStreamCallback = extern "C" fn(
 	FSEventStreamRef,  //ConstFSEventStreamRef streamRef
@@ -17,14 +14,19 @@ pub type FSEventStreamCallback = extern "C" fn(
 	*mut libc::c_void, // const FSEventStreamEventId eventIds[]
 );
 
+pub type FSEventStreamEventId = u64;
+
 pub const kFSEventStreamEventIdSinceNow: FSEventStreamEventId = 0xFFFFFFFFFFFFFFFF;
 
-pub const kFSEventStreamCreateFlagNone:FSEventStreamCreateFlags  = 0x00000000;
-pub const kFSEventStreamCreateFlagUseCFTypes:FSEventStreamCreateFlags = 0x00000001;
-pub const kFSEventStreamCreateFlagNoDefer:FSEventStreamCreateFlags = 0x00000002;
-pub const kFSEventStreamCreateFlagWatchRoot:FSEventStreamCreateFlags = 0x00000004;
-pub const kFSEventStreamCreateFlagIgnoreSelf:FSEventStreamCreateFlags = 0x00000008;
-pub const kFSEventStreamCreateFlagFileEvent:FSEventStreamCreateFlags = 0x0000001;
+pub type FSEventStreamCreateFlags = u32;
+
+pub const kFSEventStreamCreateFlagNone: FSEventStreamCreateFlags  = 0x00000000;
+pub const kFSEventStreamCreateFlagUseCFTypes: FSEventStreamCreateFlags = 0x00000001;
+pub const kFSEventStreamCreateFlagNoDefer: FSEventStreamCreateFlags = 0x00000002;
+pub const kFSEventStreamCreateFlagWatchRoot: FSEventStreamCreateFlags = 0x00000004;
+pub const kFSEventStreamCreateFlagIgnoreSelf: FSEventStreamCreateFlags = 0x00000008;
+pub const kFSEventStreamCreateFlagFileEvents: FSEventStreamCreateFlags = 0x0000001;
+
 
 
 #[repr(C)]

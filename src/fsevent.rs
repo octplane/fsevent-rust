@@ -13,8 +13,8 @@ use std::raw::Slice;
 use std::str::from_utf8;
 use std::ffi::c_str_to_bytes;
 
-pub const NULL: cf::CFRef = cf::NULL;
 
+pub const NULL: cf::CFRef = cf::NULL;
 
 pub struct FsEvent<'a> {
   paths: cf::CFMutableArrayRef,
@@ -31,9 +31,33 @@ pub struct Event<'path> {
   path: &'path str
 }
 
-
 pub type FsEventCallback = fn(Vec<Event>);
 
+
+bitflags! {
+  flags StreamFlags: u32 {
+    const NONE = 0x00000000,
+    const MUST_SCAN_SUBDIRS = 0x00000001,
+    const USER_DROPPED = 0x00000002,
+    const KERNEL_DROPPED = 0x00000004,
+    const IDS_WRAPPED = 0x00000008,
+    const HISTORY_DONE = 0x00000010,
+    const ROOT_CHANGED = 0x00000020,
+    const MOUNT = 0x00000040,
+    const UNMOUNT = 0x00000080,
+    const ITEM_CREATED = 0x00000100,
+    const ITEM_REMOVED = 0x00000200,
+    const INOTE_META_MOD = 0x00000400,
+    const ITEM_RENAMED = 0x00000800,
+    const ITEM_MODIFIED = 0x00001000,
+    const FINDER_INFO_MOD = 0x00002000,
+    const ITEM_CHANGE_OWNER = 0x00004000,
+    const ITEM_XATTR_MOD = 0x00008000,
+    const IS_FILE = 0x00010000,
+    const IS_DIR = 0x00020000,
+    const IS_SYMLIMK = 0x00040000,
+  }
+}
 
 pub fn is_api_available() -> (bool, String) {
   let ma = cf::system_version_major();
@@ -44,6 +68,8 @@ pub fn is_api_available() -> (bool, String) {
   }
   return (true, "ok".to_string());
 }
+
+
 
 fn default_stream_context(info: *const FsEvent) -> fs::FSEventStreamContext {
   let ptr = info as *mut libc::c_void;
@@ -56,7 +82,6 @@ fn default_stream_context(info: *const FsEvent) -> fs::FSEventStreamContext {
   stream_context
 }
 
-
 impl<'a> FsEvent<'a> {
   pub fn new(callback: FsEventCallback) -> FsEvent<'a> {
     let fsevent: FsEvent;
@@ -65,7 +90,7 @@ impl<'a> FsEvent<'a> {
         paths: cf::CFArrayCreateMutable(cf::kCFAllocatorDefault, 0, &cf::kCFTypeArrayCallBacks),
         since_when: fs::kFSEventStreamEventIdSinceNow,
         latency: 0.1,
-        flags: fs::kFSEventStreamCreateFlagNone,
+        flags: fs::kFSEventStreamCreateFlagFileEvents,
         callback: callback,
       };
     }
@@ -148,11 +173,8 @@ impl<'a> FsEvent<'a> {
   }
 }
 
-fn from_c_str<'a>(p: &'a *const libc::c_char) -> &'a str {
-    std::str::from_utf8( unsafe { std::ffi::c_str_to_bytes(p) } ).ok().expect("Found invalid utf8")
-}
 
-
+#[allow(unused_variables)]
 pub fn callback(
     stream_ref: fs::FSEventStreamRef,
     info: *mut libc::c_void,
@@ -174,13 +196,20 @@ pub fn callback(
       let ids = from_raw_mut_buf(&i_ptr, num);
 
       for p in (0..num) {
-        let path = from_utf8(c_str_to_bytes(&paths[p])).ok().expect("Bad UTF-8");
+        let i = c_str_to_bytes(&paths[p]);
+        let flag: StreamFlags = StreamFlags::from_bits(flags[p] as u32)
+        .expect(format!("Unable to decode StreamFlags: {}", flags[p] as u32).as_slice());
+        println!("{:x}", flags[p] as u32);
+
+        if flag.contains(IS_FILE) {
+          println!("IS_FILE");
+        }
+
+        let path = from_utf8(i).ok().expect(format!("Bad UTF-8 in path: {:?}", i).as_slice());
         events.push(Event{event_id: ids[p], flag: flags[p], path: path});
       }
 
-      unsafe {
-        ((*fs_event).callback)(events)
-      }
+      ((*fs_event).callback)(events)
     }
 
 }
