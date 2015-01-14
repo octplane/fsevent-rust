@@ -15,19 +15,25 @@ use std::ffi::c_str_to_bytes;
 
 pub const NULL: cf::CFRef = cf::NULL;
 
-pub struct FsEvent {
+
+pub struct FsEvent<'a> {
   paths: cf::CFMutableArrayRef,
   since_when: fs::FSEventStreamEventId,
   latency: cf::CFTimeInterval,
   flags: fs::FSEventStreamCreateFlags,
+  pub callback: FsEventCallback,
 }
-impl Copy for FsEvent { }
 
-pub struct Event {
+#[derive(Show)]
+pub struct Event<'path> {
   event_id: u64,
   flag: u32,
-  path: String
+  path: &'path str
 }
+
+
+pub type FsEventCallback = fn(Vec<Event>);
+
 
 pub fn is_api_available() -> (bool, String) {
   let ma = cf::system_version_major();
@@ -39,10 +45,11 @@ pub fn is_api_available() -> (bool, String) {
   return (true, "ok".to_string());
 }
 
-fn default_stream_context() -> fs::FSEventStreamContext {
+fn default_stream_context(info: *const FsEvent) -> fs::FSEventStreamContext {
+  let ptr = info as *mut libc::c_void;
   let stream_context = fs::FSEventStreamContext{
     version: 0,
-    info: cf::NULL,
+    info: ptr,
     retain: cf::NULL,
     copy_description: cf::NULL };
 
@@ -50,8 +57,8 @@ fn default_stream_context() -> fs::FSEventStreamContext {
 }
 
 
-impl FsEvent {
-  pub fn new() -> FsEvent {
+impl<'a> FsEvent<'a> {
+  pub fn new(callback: FsEventCallback) -> FsEvent<'a> {
     let fsevent: FsEvent;
     unsafe {
       fsevent = FsEvent{
@@ -59,6 +66,7 @@ impl FsEvent {
         since_when: fs::kFSEventStreamEventIdSinceNow,
         latency: 0.1,
         flags: fs::kFSEventStreamCreateFlagNone,
+        callback: callback,
       };
     }
     fsevent
@@ -112,7 +120,7 @@ impl FsEvent {
     }
   }
   pub fn observe(&self) {
-    let stream_context = default_stream_context();
+    let stream_context = default_stream_context(self);
 
     let cb = callback as *mut _;
 
@@ -147,7 +155,7 @@ fn from_c_str<'a>(p: &'a *const libc::c_char) -> &'a str {
 
 pub fn callback(
     stream_ref: fs::FSEventStreamRef,
-    client_callback_info: *mut libc::c_void,
+    info: *mut libc::c_void,
     num_events: libc::size_t,      // size_t numEvents
     event_paths: *const *const libc::c_char, // void *eventPaths
     event_flags: *mut libc::c_void, // const FSEventStreamEventFlags eventFlags[]
@@ -156,23 +164,23 @@ pub fn callback(
     let num = num_events as usize;
     let e_ptr = event_flags as *mut u32;
     let i_ptr = event_ids as *mut u64;
+    let fs_event = info as *mut FsEvent;
+
+    let mut events: Vec<Event> = Vec::new();
 
     unsafe {
       let paths: &[*const libc::c_char] = transmute(Slice { data: event_paths, len: num });
       let flags = from_raw_mut_buf(&e_ptr, num);
       let ids = from_raw_mut_buf(&i_ptr, num);
 
-      // let flags: &[u32] = transmute(Slice { data: c_flags, len: num });
-      // let ids: &[u64] = transmute(Slice { data: c_ids, len: num });
+      for p in (0..num) {
+        let path = from_utf8(c_str_to_bytes(&paths[p])).ok().expect("Bad UTF-8");
+        events.push(Event{event_id: ids[p], flag: flags[p], path: path});
+      }
 
-      for path in paths.iter() {
-          println!("{}", from_utf8(c_str_to_bytes(path)).ok().expect("Bad UTF-8"));
-      }
-      for flag in flags.iter() {
-          println!("{}", flag);
-      }
-      for id in ids.iter() {
-          println!("{}", id);
+      unsafe {
+        let fs_e = *fs_event;
+        (fs_e.callback)(events);
       }
     }
 

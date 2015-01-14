@@ -2,10 +2,17 @@
 
 extern crate fsevent;
 
-fn main() {
-    let fsevent = fsevent::FsEvent::new();
+fn cb(events: Vec<fsevent::Event>) {
+	for i in events.iter() {
+		println!("{:?}", i);
+	}
+}
 
-    fsevent.append_path(".");
+
+fn main() {
+    let fsevent = fsevent::FsEvent::new(cb);
+
+    fsevent.append_path("../../");
 
     fsevent.observe();
 }
