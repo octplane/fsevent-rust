@@ -6,6 +6,8 @@ extern crate libc;
 use fsevent::core_foundation as cf;
 use fsevent::fsevent as fs;
 
+use std::fmt::{Error, Show, Formatter};
+use std::result::Result;
 use std::ffi::CString;
 use std::mem::transmute;
 use std::slice::from_raw_mut_buf;
@@ -27,12 +29,11 @@ pub struct FsEvent<'a> {
 #[derive(Show)]
 pub struct Event<'path> {
   event_id: u64,
-  flag: u32,
+  flag: StreamFlags,
   path: &'path str
 }
 
 pub type FsEventCallback = fn(Vec<Event>);
-
 
 bitflags! {
   flags StreamFlags: u32 {
@@ -59,6 +60,12 @@ bitflags! {
   }
 }
 
+impl Show for StreamFlags {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
+      write!(f, "{}", self.bits())
+    }
+}
+
 pub fn is_api_available() -> (bool, String) {
   let ma = cf::system_version_major();
   let mi = cf::system_version_minor();
@@ -68,7 +75,6 @@ pub fn is_api_available() -> (bool, String) {
   }
   return (true, "ok".to_string());
 }
-
 
 
 fn default_stream_context(info: *const FsEvent) -> fs::FSEventStreamContext {
@@ -137,7 +143,6 @@ impl<'a> FsEvent<'a> {
         cf::CFRelease(imaginary);
       }
 
-
       let cf_path = cf::CFURLCopyFileSystemPath(placeholder, cf::kCFURLPOSIXPathStyle);
       cf::CFArrayAppendValue(self.paths, cf_path);
       cf::CFRelease(cf_path);
@@ -158,7 +163,7 @@ impl<'a> FsEvent<'a> {
        self.latency,
        self.flags);
 
-      fs::FSEventStreamShow(stream);
+      // fs::FSEventStreamShow(stream);
 
       fs::FSEventStreamScheduleWithRunLoop(stream,
         cf::CFRunLoopGetCurrent(),
@@ -200,12 +205,8 @@ pub fn callback(
         let flag: StreamFlags = StreamFlags::from_bits(flags[p] as u32)
         .expect(format!("Unable to decode StreamFlags: {}", flags[p] as u32).as_slice());
 
-        // if flag.contains(IS_FILE) {
-        //   println!("IS_FILE");
-        // }
-
         let path = from_utf8(i).ok().expect("Invalid UTF8 string.");
-        events.push(Event{event_id: ids[p], flag: flags[p], path: path});
+        events.push(Event{event_id: ids[p], flag: flag, path: path});
       }
 
       ((*fs_event).callback)(events)
