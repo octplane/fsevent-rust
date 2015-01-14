@@ -199,13 +199,12 @@ pub fn callback(
         let i = c_str_to_bytes(&paths[p]);
         let flag: StreamFlags = StreamFlags::from_bits(flags[p] as u32)
         .expect(format!("Unable to decode StreamFlags: {}", flags[p] as u32).as_slice());
-        println!("{:x}", flags[p] as u32);
 
-        if flag.contains(IS_FILE) {
-          println!("IS_FILE");
-        }
+        // if flag.contains(IS_FILE) {
+        //   println!("IS_FILE");
+        // }
 
-        let path = from_utf8(i).ok().expect(format!("Bad UTF-8 in path: {:?}", i).as_slice());
+        let path = from_utf8(i).ok().expect("Invalid UTF8 string.");
         events.push(Event{event_id: ids[p], flag: flags[p], path: path});
       }
 

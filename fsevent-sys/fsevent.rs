@@ -20,14 +20,12 @@ pub const kFSEventStreamEventIdSinceNow: FSEventStreamEventId = 0xFFFFFFFFFFFFFF
 
 pub type FSEventStreamCreateFlags = u32;
 
-pub const kFSEventStreamCreateFlagNone: FSEventStreamCreateFlags  = 0x00000000;
-pub const kFSEventStreamCreateFlagUseCFTypes: FSEventStreamCreateFlags = 0x00000001;
-pub const kFSEventStreamCreateFlagNoDefer: FSEventStreamCreateFlags = 0x00000002;
-pub const kFSEventStreamCreateFlagWatchRoot: FSEventStreamCreateFlags = 0x00000004;
-pub const kFSEventStreamCreateFlagIgnoreSelf: FSEventStreamCreateFlags = 0x00000008;
-pub const kFSEventStreamCreateFlagFileEvents: FSEventStreamCreateFlags = 0x0000001;
-
-
+pub const kFSEventStreamCreateFlagNone: FSEventStreamCreateFlags 		= 0x00000000;
+pub const kFSEventStreamCreateFlagUseCFTypes: FSEventStreamCreateFlags 	= 0x00000001;
+pub const kFSEventStreamCreateFlagNoDefer: FSEventStreamCreateFlags 	= 0x00000002;
+pub const kFSEventStreamCreateFlagWatchRoot: FSEventStreamCreateFlags 	= 0x00000004;
+pub const kFSEventStreamCreateFlagIgnoreSelf: FSEventStreamCreateFlags 	= 0x00000008;
+pub const kFSEventStreamCreateFlagFileEvents: FSEventStreamCreateFlags 	= 0x00000010;
 
 #[repr(C)]
 pub struct FSEventStreamContext {
