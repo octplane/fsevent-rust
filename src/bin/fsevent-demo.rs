@@ -1,19 +1,24 @@
 #![feature(link_args)]
 
 extern crate fsevent;
-
-#[allow(dead_code)]
-fn cb(events: Vec<fsevent::Event>) {
-	for i in events.iter() {
-		println!("{:?}", i);
-	}
-}
+use std::sync::mpsc::channel;
+use std::thread::Thread;
 
 #[allow(dead_code)]
 fn main() {
-    let fsevent = fsevent::FsEvent::new(cb);
+    let (sender, receiver) = channel::<fsevent::Event>();
 
-    fsevent.append_path("../../");
+	let _t = Thread::spawn(move || {
+	    let fsevent = fsevent::FsEvent::new(sender);
+    	fsevent.append_path("../../");
+		fsevent.observe();
+	});
 
-    fsevent.observe();
+	loop {
+    	select! (
+    		val = receiver.recv() => {
+    			println!("{:?}", val);
+    		}
+    	)
+	}
 }

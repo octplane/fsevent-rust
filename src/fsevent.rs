@@ -1,4 +1,6 @@
 #![allow(unstable)]
+#[macro_use] extern crate rustc_bitflags;
+
 
 extern crate "fsevent-sys" as fsevent;
 extern crate libc;
@@ -15,6 +17,7 @@ use std::raw::Slice;
 use std::str::from_utf8;
 use std::ffi::c_str_to_bytes;
 
+use std::sync::mpsc::{Sender};
 
 pub const NULL: cf::CFRef = cf::NULL;
 
@@ -23,7 +26,7 @@ pub struct FsEvent<'a> {
   since_when: fs::FSEventStreamEventId,
   latency: cf::CFTimeInterval,
   flags: fs::FSEventStreamCreateFlags,
-  pub callback: FsEventCallback,
+  sender: Sender<Event>,
 }
 
 #[derive(Show)]
@@ -89,19 +92,21 @@ fn default_stream_context(info: *const FsEvent) -> fs::FSEventStreamContext {
 }
 
 impl<'a> FsEvent<'a> {
-  pub fn new(callback: FsEventCallback) -> FsEvent<'a> {
+  pub fn new(sender: Sender<Event>) -> FsEvent<'a> {
     let fsevent: FsEvent;
+
     unsafe {
       fsevent = FsEvent{
         paths: cf::CFArrayCreateMutable(cf::kCFAllocatorDefault, 0, &cf::kCFTypeArrayCallBacks),
         since_when: fs::kFSEventStreamEventIdSinceNow,
         latency: 0.1,
         flags: fs::kFSEventStreamCreateFlagFileEvents,
-        callback: callback,
+        sender: sender,
       };
     }
     fsevent
   }
+
 
   // https://github.com/thibaudgg/rb-fsevent/blob/master/ext/fsevent_watch/main.c
   pub fn append_path(&self,source: &str) {
@@ -171,6 +176,7 @@ impl<'a> FsEvent<'a> {
 
       fs::FSEventStreamStart(stream);
       cf::CFRunLoopRun();
+
       fs::FSEventStreamFlushSync(stream);
       fs::FSEventStreamStop(stream);
 
@@ -188,28 +194,24 @@ pub fn callback(
     event_flags: *mut libc::c_void, // const FSEventStreamEventFlags eventFlags[]
     event_ids: *mut libc::c_void,  // const FSEventStreamEventId eventIds[]
   ) {
-    let num = num_events as usize;
-    let e_ptr = event_flags as *mut u32;
-    let i_ptr = event_ids as *mut u64;
-    let fs_event = info as *mut FsEvent;
+  let num = num_events as usize;
+  let e_ptr = event_flags as *mut u32;
+  let i_ptr = event_ids as *mut u64;
+  let fs_event = info as *mut FsEvent;
 
-    let mut events: Vec<Event> = Vec::new();
+  unsafe {
+    let paths: &[*const libc::c_char] = transmute(Slice { data: event_paths, len: num });
+    let flags = from_raw_mut_buf(&e_ptr, num);
+    let ids = from_raw_mut_buf(&i_ptr, num);
 
-    unsafe {
-      let paths: &[*const libc::c_char] = transmute(Slice { data: event_paths, len: num });
-      let flags = from_raw_mut_buf(&e_ptr, num);
-      let ids = from_raw_mut_buf(&i_ptr, num);
+    for p in (0..num) {
+      let i = c_str_to_bytes(&paths[p]);
+      let flag: StreamFlags = StreamFlags::from_bits(flags[p] as u32)
+      .expect(format!("Unable to decode StreamFlags: {}", flags[p] as u32).as_slice());
 
-      for p in (0..num) {
-        let i = c_str_to_bytes(&paths[p]);
-        let flag: StreamFlags = StreamFlags::from_bits(flags[p] as u32)
-        .expect(format!("Unable to decode StreamFlags: {}", flags[p] as u32).as_slice());
-
-        let path = from_utf8(i).ok().expect("Invalid UTF8 string.");
-        events.push(Event{event_id: ids[p], flag: flag, path: path.to_string()});
-      }
-
-      ((*fs_event).callback)(events)
+      let path = from_utf8(i).ok().expect("Invalid UTF8 string.");
+      let event = Event{event_id: ids[p], flag: flag, path: path.to_string()};
+      let _s = (*fs_event).sender.send(event);
     }
-
+  }
 }
