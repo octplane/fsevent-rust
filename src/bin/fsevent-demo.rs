@@ -6,19 +6,19 @@ use std::thread::Thread;
 
 #[allow(dead_code)]
 fn main() {
-    let (sender, receiver) = channel::<fsevent::Event>();
+  let (sender, receiver) = channel::<fsevent::Event>();
 
-	let _t = Thread::spawn(move || {
-	    let fsevent = fsevent::FsEvent::new(sender);
-    	fsevent.append_path("../../");
-		fsevent.observe();
-	});
+  let _t = Thread::spawn(move || {
+    let fsevent = fsevent::FsEvent::new(sender);
+    fsevent.append_path("../../");
+    fsevent.observe();
+  });
 
-	loop {
-    	select! (
-    		val = receiver.recv() => {
-    			println!("{:?}", val);
-    		}
-    	)
-	}
+  loop {
+    select! (
+      val = receiver.recv() => {
+        println!("{:?}", val);
+      }
+    )
+  }
 }
