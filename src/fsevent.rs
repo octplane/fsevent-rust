@@ -27,10 +27,10 @@ pub struct FsEvent<'a> {
 }
 
 #[derive(Show)]
-pub struct Event<'path> {
+pub struct Event {
   event_id: u64,
   flag: StreamFlags,
-  path: &'path str
+  path: String,
 }
 
 pub type FsEventCallback = fn(Vec<Event>);
@@ -206,7 +206,7 @@ pub fn callback(
         .expect(format!("Unable to decode StreamFlags: {}", flags[p] as u32).as_slice());
 
         let path = from_utf8(i).ok().expect("Invalid UTF8 string.");
-        events.push(Event{event_id: ids[p], flag: flag, path: path});
+        events.push(Event{event_id: ids[p], flag: flag, path: path.to_string()});
       }
 
       ((*fs_event).callback)(events)
