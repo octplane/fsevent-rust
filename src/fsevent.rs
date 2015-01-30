@@ -1,6 +1,8 @@
-#![allow(unstable)]
-#[macro_use] extern crate rustc_bitflags;
+#![feature(libc, core, collections, std_misc)]
+#![feature(rustc_private)]
+#![feature(hash)]
 
+#[macro_use] extern crate rustc_bitflags;
 
 extern crate "fsevent-sys" as fsevent;
 extern crate libc;
@@ -8,7 +10,7 @@ extern crate libc;
 use fsevent::core_foundation as cf;
 use fsevent::fsevent as fs;
 
-use std::fmt::{Error, Show, Formatter};
+use std::fmt::{Error, Debug, Formatter};
 use std::result::Result;
 use std::ffi::CString;
 use std::mem::transmute;
@@ -63,7 +65,7 @@ bitflags! {
   }
 }
 
-impl Show for StreamFlags {
+impl Debug for StreamFlags {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
       write!(f, "{}", self.bits())
     }

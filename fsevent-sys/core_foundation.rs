@@ -1,4 +1,5 @@
-#![allow(non_upper_case_globals, non_camel_case_types, unstable)]
+#![allow(non_upper_case_globals, non_camel_case_types)]
+
 extern crate libc;
 
 pub type UInt32 = libc::c_uint;

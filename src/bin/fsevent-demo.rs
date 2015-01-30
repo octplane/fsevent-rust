@@ -1,11 +1,11 @@
 #![feature(link_args)]
+#![feature(std_misc)]
 
 extern crate fsevent;
 use std::sync::mpsc::channel;
 use std::thread::Thread;
 
 #[allow(dead_code)]
-#[allow(unstable)]
 fn main() {
   let (sender, receiver) = channel::<fsevent::Event>();
 
