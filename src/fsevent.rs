@@ -31,7 +31,7 @@ pub struct FsEvent<'a> {
   sender: Sender<Event>,
 }
 
-#[derive(Show)]
+#[derive(Debug)]
 pub struct Event {
   event_id: u64,
   flag: StreamFlags,
