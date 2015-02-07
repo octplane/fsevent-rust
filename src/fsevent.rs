@@ -14,7 +14,7 @@ use std::fmt::{Error, Debug, Formatter};
 use std::result::Result;
 use std::ffi::CString;
 use std::mem::transmute;
-use std::slice::from_raw_mut_buf;
+use std::slice::from_raw_parts_mut;
 use std::raw::Slice;
 use std::str::from_utf8;
 use std::ffi::c_str_to_bytes;
@@ -186,7 +186,6 @@ impl<'a> FsEvent<'a> {
   }
 }
 
-
 #[allow(unused_variables)]
 pub fn callback(
     stream_ref: fs::FSEventStreamRef,
@@ -203,8 +202,8 @@ pub fn callback(
 
   unsafe {
     let paths: &[*const libc::c_char] = transmute(Slice { data: event_paths, len: num });
-    let flags = from_raw_mut_buf(&e_ptr, num);
-    let ids = from_raw_mut_buf(&i_ptr, num);
+    let flags = from_raw_parts_mut(e_ptr, num);
+    let ids = from_raw_parts_mut(i_ptr, num);
 
     for p in (0..num) {
       let i = c_str_to_bytes(&paths[p]);
