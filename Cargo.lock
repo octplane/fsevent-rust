@@ -1,6 +1,6 @@
 [root]
 name = "fsevent"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "fsevent-sys 0.1.1",
 ]

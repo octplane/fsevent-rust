@@ -1,6 +1,5 @@
 #![feature(libc, core, std_misc)]
 #![feature(rustc_private)]
-#![feature(hash)]
 
 #[macro_use] extern crate rustc_bitflags;
 
@@ -17,13 +16,13 @@ use std::mem::transmute;
 use std::slice::from_raw_parts_mut;
 use std::raw::Slice;
 use std::str::from_utf8;
-use std::ffi::c_str_to_bytes;
+use std::ffi::CStr;
 
 use std::sync::mpsc::{Sender};
 
 pub const NULL: cf::CFRef = cf::NULL;
 
-pub struct FsEvent<'a> {
+pub struct FsEvent {
   paths: cf::CFMutableArrayRef,
   since_when: fs::FSEventStreamEventId,
   latency: cf::CFTimeInterval,
@@ -93,8 +92,8 @@ fn default_stream_context(info: *const FsEvent) -> fs::FSEventStreamContext {
   stream_context
 }
 
-impl<'a> FsEvent<'a> {
-  pub fn new(sender: Sender<Event>) -> FsEvent<'a> {
+impl FsEvent {
+  pub fn new(sender: Sender<Event>) -> FsEvent {
     let fsevent: FsEvent;
 
     unsafe {
@@ -113,9 +112,9 @@ impl<'a> FsEvent<'a> {
   // https://github.com/thibaudgg/rb-fsevent/blob/master/ext/fsevent_watch/main.c
   pub fn append_path(&self,source: &str) {
     unsafe {
-      let cp = CString::from_slice(source.as_bytes());
-      let c_path = cp.as_slice_with_nul();
-      let mut url = cf::CFURLCreateFromFileSystemRepresentation(cf::kCFAllocatorDefault, c_path.as_ptr(), c_path.len() as i64, false);
+      let c_path = CString::new(source).unwrap();
+      let c_len = libc::strlen(c_path.as_ptr());
+      let mut url = cf::CFURLCreateFromFileSystemRepresentation(cf::kCFAllocatorDefault, c_path.as_ptr(), c_len as i64, false);
       let mut placeholder = cf::CFURLCopyAbsoluteURL(url);
       cf::CFRelease(url);
 
@@ -206,7 +205,7 @@ pub fn callback(
     let ids = from_raw_parts_mut(i_ptr, num);
 
     for p in (0..num) {
-      let i = c_str_to_bytes(&paths[p]);
+      let i = CStr::from_ptr(paths[p]).to_bytes();
       let flag: StreamFlags = StreamFlags::from_bits(flags[p] as u32)
       .expect(format!("Unable to decode StreamFlags: {}", flags[p] as u32).as_slice());
 
