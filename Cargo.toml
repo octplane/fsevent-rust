@@ -1,7 +1,7 @@
 [package]
 
 name = "fsevent"
-version = "0.2.5"
+version = "0.2.6"
 authors = [ "Pierre Baillet <pierre@baillet.name>" ]
 description = "Rust bindings to the fsevent-sys OSX API for file changes notifications"
 license-file = "LICENSE"

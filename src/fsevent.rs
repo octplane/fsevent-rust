@@ -1,4 +1,4 @@
-#![feature(libc, core, std_misc)]
+#![feature(libc, core)]
 #![feature(rustc_private)]
 
 #[macro_use] extern crate rustc_bitflags;
