@@ -34,7 +34,8 @@ pub struct FSEventStreamContext {
    pub retain: *mut libc::c_void,
    pub copy_description: *mut libc::c_void,
 }
-impl Copy for FSEventStreamContext { }
+// impl Clone for FSEventStreamContext { }
+// impl Copy for FSEventStreamContext { }
 
 #[link(name = "CoreServices", kind = "framework")]
 extern "C" {
@@ -57,6 +58,3 @@ extern "C" {
 	pub fn FSEventStreamFlushSync(stream_ref: FSEventStreamRef);
 	pub fn FSEventStreamStop(stream_ref: FSEventStreamRef);
 }
-
-
-

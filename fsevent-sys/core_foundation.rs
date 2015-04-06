@@ -44,7 +44,7 @@ pub struct CFArrayCallBacks {
    cp: CFRef,
    equal: CFRef,
 }
-impl Copy for CFArrayCallBacks { }
+//impl Clone for CFArrayCallBacks { }
 
 
 #[link(name = "CoreServices", kind = "framework")]
@@ -113,4 +113,3 @@ pub fn system_version_bugfix() -> SInt32 {
   }
 
 }
-

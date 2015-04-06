@@ -7,10 +7,6 @@ description = "Rust bindings to the fsevent-sys OSX API for file changes notific
 license-file = "LICENSE"
 repository = "https://github.com/octplane/fsevent-rust"
 
-[[bin]]
-
-name = "fsevent-demo"
-
 [lib]
 name = "fsevent"
 test = false

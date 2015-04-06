@@ -1,22 +1,21 @@
-#![feature(libc, core)]
-#![feature(rustc_private)]
+#[macro_use]
+extern crate bitflags;
 
-#[macro_use] extern crate rustc_bitflags;
-
-extern crate "fsevent-sys" as fsevent;
+extern crate fsevent_sys as fsevent;
 extern crate libc;
 
 use fsevent::core_foundation as cf;
 use fsevent::fsevent as fs;
 
+use std::slice;
 use std::fmt::{Error, Debug, Formatter};
 use std::result::Result;
 use std::ffi::CString;
 use std::mem::transmute;
 use std::slice::from_raw_parts_mut;
-use std::raw::Slice;
 use std::str::from_utf8;
 use std::ffi::CStr;
+use std::convert::AsRef;
 
 use std::sync::mpsc::{Sender};
 
@@ -200,14 +199,14 @@ pub fn callback(
   let fs_event = info as *mut FsEvent;
 
   unsafe {
-    let paths: &[*const libc::c_char] = transmute(Slice { data: event_paths, len: num });
+    let paths: &[*const libc::c_char] = std::mem::transmute(slice::from_raw_parts(event_paths, num));
     let flags = from_raw_parts_mut(e_ptr, num);
     let ids = from_raw_parts_mut(i_ptr, num);
 
     for p in (0..num) {
       let i = CStr::from_ptr(paths[p]).to_bytes();
       let flag: StreamFlags = StreamFlags::from_bits(flags[p] as u32)
-      .expect(format!("Unable to decode StreamFlags: {}", flags[p] as u32).as_slice());
+      .expect(format!("Unable to decode StreamFlags: {}", flags[p] as u32).as_ref());
 
       let path = from_utf8(i).ok().expect("Invalid UTF8 string.");
       let event = Event{event_id: ids[p], flag: flag, path: path.to_string()};
