@@ -1,5 +1,4 @@
-#[macro_use]
-extern crate bitflags;
+#[macro_use] extern crate bitflags;
 
 extern crate fsevent_sys as fsevent;
 extern crate libc;
