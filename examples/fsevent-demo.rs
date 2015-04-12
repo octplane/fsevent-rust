@@ -2,7 +2,6 @@ extern crate fsevent;
 use std::sync::mpsc::channel;
 use std::thread;
 
-#[allow(dead_code)]
 fn main() {
   let (sender, receiver) = channel();
 
@@ -13,10 +12,7 @@ fn main() {
   });
 
   loop {
-    select! (
-      val = receiver.recv() => {
-        println!("{:?}", val.unwrap());
-      }
-    )
+    let val = receiver.recv();
+    println!("{:?}", val.unwrap());
   }
 }
