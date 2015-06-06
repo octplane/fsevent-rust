@@ -7,8 +7,6 @@ use fsevent::core_foundation as cf;
 use fsevent::fsevent as fs;
 
 use std::slice;
-use std::fmt::{Error, Debug, Formatter};
-use std::result::Result;
 use std::ffi::CString;
 use std::mem::transmute;
 use std::slice::from_raw_parts_mut;
@@ -60,12 +58,6 @@ bitflags! {
     const IS_DIR = 0x00020000,
     const IS_SYMLIMK = 0x00040000,
   }
-}
-
-impl Debug for StreamFlags {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
-      write!(f, "{}", self.bits())
-    }
 }
 
 pub fn is_api_available() -> (bool, String) {
