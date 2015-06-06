@@ -28,9 +28,9 @@ pub struct FsEvent {
 
 #[derive(Debug)]
 pub struct Event {
-  event_id: u64,
-  flag: StreamFlags,
-  path: String,
+  pub event_id: u64,
+  pub flag: StreamFlags,
+  pub path: String,
 }
 
 pub type FsEventCallback = fn(Vec<Event>);
