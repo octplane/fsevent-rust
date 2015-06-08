@@ -57,4 +57,6 @@ extern "C" {
 	pub fn FSEventStreamStart(stream_ref: FSEventStreamRef) -> bool;
 	pub fn FSEventStreamFlushSync(stream_ref: FSEventStreamRef);
 	pub fn FSEventStreamStop(stream_ref: FSEventStreamRef);
+	pub fn FSEventStreamInvalidate(stream_ref: FSEventStreamRef);
+	pub fn FSEventStreamRelease(stream_ref: FSEventStreamRef);
 }

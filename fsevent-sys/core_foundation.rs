@@ -57,6 +57,7 @@ extern "C" {
     pub fn CFShow(res: CFRef);
 
     pub fn CFRunLoopRun();
+    pub fn CFRunLoopStop(run_loop: CFRunLoopRef);
     pub fn CFRunLoopGetCurrent() -> CFRunLoopRef;
 
     pub fn CFArrayCreateMutable(allocator: CFRef, capacity: CFIndex, callbacks: *const CFArrayCallBacks) -> CFMutableArrayRef;
