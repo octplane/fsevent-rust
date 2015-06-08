@@ -7,7 +7,6 @@ use fsevent::core_foundation as cf;
 use fsevent::fsevent as fs;
 
 use std::slice;
-use std::ffi::CString;
 use std::mem::transmute;
 use std::slice::from_raw_parts_mut;
 use std::str::from_utf8;
@@ -71,13 +70,15 @@ pub fn is_api_available() -> (bool, String) {
 }
 
 
+
 fn default_stream_context(info: *const FsEvent) -> fs::FSEventStreamContext {
   let ptr = info as *mut libc::c_void;
   let stream_context = fs::FSEventStreamContext{
     version: 0,
     info: ptr,
     retain: cf::NULL,
-    copy_description: cf::NULL };
+    copy_description: cf::NULL
+  };
 
   stream_context
 }
@@ -99,50 +100,13 @@ impl FsEvent {
   }
 
 
+
   // https://github.com/thibaudgg/rb-fsevent/blob/master/ext/fsevent_watch/main.c
   pub fn append_path(&self,source: &str) {
     unsafe {
-      let c_path = CString::new(source).unwrap();
-      let c_len = libc::strlen(c_path.as_ptr());
-      let mut url = cf::CFURLCreateFromFileSystemRepresentation(cf::kCFAllocatorDefault, c_path.as_ptr(), c_len as i64, false);
-      let mut placeholder = cf::CFURLCopyAbsoluteURL(url);
-      cf::CFRelease(url);
-
-      let imaginary: cf::CFRef = cf::CFArrayCreateMutable(cf::kCFAllocatorDefault, 0, &cf::kCFTypeArrayCallBacks);
-
-      while !cf::CFURLResourceIsReachable(placeholder, cf::kCFAllocatorDefault) {
-
-        let child = cf::CFURLCopyLastPathComponent(placeholder);
-        cf::CFArrayInsertValueAtIndex(imaginary, 0, child);
-        cf::CFRelease(child);
-
-        url = cf::CFURLCreateCopyDeletingLastPathComponent(cf::kCFAllocatorDefault, placeholder);
-        cf::CFRelease(placeholder);
-        placeholder = url;
-      }
-
-      url = cf::CFURLCreateFileReferenceURL(cf::kCFAllocatorDefault, placeholder, cf::kCFAllocatorDefault);
-      cf::CFRelease(placeholder);
-      placeholder = cf::CFURLCreateFilePathURL(cf::kCFAllocatorDefault, url, cf::kCFAllocatorDefault);
-      cf::CFRelease(url);
-
-      if imaginary != cf::kCFAllocatorDefault {
-        let mut count =  0;
-        while { count < cf::CFArrayGetCount(imaginary) }
-        {
-          let component = cf::CFArrayGetValueAtIndex(imaginary, count);
-          url = cf::CFURLCreateCopyAppendingPathComponent(cf::kCFAllocatorDefault, placeholder, component, false);
-          cf::CFRelease(placeholder);
-          placeholder = url;
-          count = count + 1;
-        }
-        cf::CFRelease(imaginary);
-      }
-
-      let cf_path = cf::CFURLCopyFileSystemPath(placeholder, cf::kCFURLPOSIXPathStyle);
+      let cf_path = cf::str_path_to_cfstring_ref(source);
       cf::CFArrayAppendValue(self.paths, cf_path);
       cf::CFRelease(cf_path);
-      cf::CFRelease(placeholder);
     }
   }
   pub fn observe(&self) {

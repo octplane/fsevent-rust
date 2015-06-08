@@ -2,6 +2,8 @@
 
 extern crate libc;
 
+use std::ffi::CString;
+
 pub type UInt32 = libc::c_uint;
 pub type SInt16 = libc::c_short;
 pub type SInt32 = libc::c_int;
@@ -38,11 +40,11 @@ pub const kCFURLWindowsPathStyle: CFURLPathStyle = 2;
 
 #[repr(C)]
 pub struct CFArrayCallBacks {
-   version: CFIndex,
-   retain: CFRef,
-   release: CFRef,
-   cp: CFRef,
-   equal: CFRef,
+  version: CFIndex,
+  retain: CFRef,
+  release: CFRef,
+  cp: CFRef,
+  equal: CFRef,
 }
 //impl Clone for CFArrayCallBacks { }
 
@@ -113,4 +115,45 @@ pub fn system_version_bugfix() -> SInt32 {
     return ret;
   }
 
+}
+
+pub unsafe fn str_path_to_cfstring_ref(source: &str) -> CFStringRef {
+  let c_path = CString::new(source).unwrap();
+  let c_len = libc::strlen(c_path.as_ptr());
+  let mut url = CFURLCreateFromFileSystemRepresentation(kCFAllocatorDefault, c_path.as_ptr(), c_len as i64, false);
+  let mut placeholder = CFURLCopyAbsoluteURL(url);
+  CFRelease(url);
+
+  let imaginary: CFRef = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
+
+  while !CFURLResourceIsReachable(placeholder, kCFAllocatorDefault) {
+    let child = CFURLCopyLastPathComponent(placeholder);
+    CFArrayInsertValueAtIndex(imaginary, 0, child);
+    CFRelease(child);
+
+    url = CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, placeholder);
+    CFRelease(placeholder);
+    placeholder = url;
+  }
+
+  url = CFURLCreateFileReferenceURL(kCFAllocatorDefault, placeholder, kCFAllocatorDefault);
+  CFRelease(placeholder);
+  placeholder = CFURLCreateFilePathURL(kCFAllocatorDefault, url, kCFAllocatorDefault);
+  CFRelease(url);
+
+  if imaginary != kCFAllocatorDefault {
+    let mut count =  0;
+    while count < CFArrayGetCount(imaginary) {
+      let component = CFArrayGetValueAtIndex(imaginary, count);
+      url = CFURLCreateCopyAppendingPathComponent(kCFAllocatorDefault, placeholder, component, false);
+      CFRelease(placeholder);
+      placeholder = url;
+      count = count + 1;
+    }
+    CFRelease(imaginary);
+  }
+
+  let cf_path = CFURLCopyFileSystemPath(placeholder, kCFURLPOSIXPathStyle);
+  CFRelease(placeholder);
+  cf_path
 }
