@@ -37,6 +37,16 @@ pub const kCFURLPOSIXPathStyle: CFURLPathStyle = 0;
 pub const kCFURLHFSPathStyle: CFURLPathStyle = 1;
 pub const kCFURLWindowsPathStyle: CFURLPathStyle = 2;
 
+pub const kCFStringEncodingUTF8: u32 = 0x08000100;
+pub type CFStringEncoding = u32;
+
+pub const kCFCompareEqualTo: i32 = 0;
+pub type CFComparisonResult = i32;
+
+// MacOS uses Case Insensitive path
+pub const kCFCompareCaseInsensitive: u32 = 1;
+pub type CFStringCompareFlags = u32;
+
 
 #[repr(C)]
 pub struct CFArrayCallBacks {
@@ -62,6 +72,7 @@ extern "C" {
     pub fn CFRunLoopStop(run_loop: CFRunLoopRef);
     pub fn CFRunLoopGetCurrent() -> CFRunLoopRef;
 
+
     pub fn CFArrayCreateMutable(allocator: CFRef, capacity: CFIndex, callbacks: *const CFArrayCallBacks) -> CFMutableArrayRef;
     pub fn CFArrayInsertValueAtIndex(arr: CFMutableArrayRef, position: CFIndex, element: CFRef);
     pub fn CFArrayAppendValue(aff: CFMutableArrayRef, element: CFRef);
@@ -78,6 +89,12 @@ extern "C" {
     pub fn CFURLCopyFileSystemPath(anUrl: CFURLRef, path_style: CFURLPathStyle) -> CFStringRef;
 
     pub fn CFURLResourceIsReachable(res: CFURLRef, err: CFErrorRef) -> bool;
+
+    pub fn CFShowStr (str: CFStringRef);
+    pub fn CFStringGetCStringPtr(theString: CFStringRef, encoding: CFStringEncoding) -> *const libc::c_char;
+    pub fn CFStringCompare(theString1: CFStringRef, theString2: CFStringRef, compareOptions: CFStringCompareFlags) -> CFComparisonResult;
+    pub fn CFArrayRemoveValueAtIndex(theArray: CFMutableArrayRef, idx: CFIndex);
+
 }
 
 
