@@ -28,7 +28,8 @@ pub type CFErrorRef = CFRef;
 pub type CFStringRef = CFRef;
 pub type CFRunLoopRef = CFRef;
 
-pub const NULL: CFRef = 0 as *mut libc::c_void;
+pub const NULL: CFRef = 0 as CFRef;
+pub const NULL_REF_PTR: *mut CFRef = 0 as *mut CFRef;
 
 pub type CFURLPathStyle = libc::c_uint;
 
@@ -88,7 +89,7 @@ extern "C" {
     pub fn CFURLCreateCopyAppendingPathComponent(allocation: CFRef, url: CFURLRef, path: CFStringRef, is_directory: bool) -> CFURLRef;
     pub fn CFURLCopyFileSystemPath(anUrl: CFURLRef, path_style: CFURLPathStyle) -> CFStringRef;
 
-    pub fn CFURLResourceIsReachable(res: CFURLRef, err: CFErrorRef) -> bool;
+    pub fn CFURLResourceIsReachable(res: CFURLRef, err: *mut CFErrorRef) -> bool;
 
     pub fn CFShowStr (str: CFStringRef);
     pub fn CFStringGetCStringPtr(theString: CFStringRef, encoding: CFStringEncoding) -> *const libc::c_char;
@@ -143,7 +144,7 @@ pub unsafe fn str_path_to_cfstring_ref(source: &str) -> CFStringRef {
 
   let imaginary: CFRef = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 
-  while !CFURLResourceIsReachable(placeholder, kCFAllocatorDefault) {
+  while !CFURLResourceIsReachable(placeholder, NULL_REF_PTR) {
     let child = CFURLCopyLastPathComponent(placeholder);
     CFArrayInsertValueAtIndex(imaginary, 0, child);
     CFRelease(child);
