@@ -19,3 +19,7 @@ version = "~0.1.0"
 [dependencies]
 bitflags = "*"
 libc = "*"
+
+[dev-dependencies]
+tempdir = "^0.3.4"
+time = "*"
