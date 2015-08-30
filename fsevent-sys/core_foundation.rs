@@ -48,6 +48,11 @@ pub type CFComparisonResult = i32;
 pub const kCFCompareCaseInsensitive: u32 = 1;
 pub type CFStringCompareFlags = u32;
 
+// CFStringEncoding
+pub type kCFStringEncoding = u32;
+pub const UTF8: kCFStringEncoding = 0x08000100;
+
+
 
 #[repr(C)]
 pub struct CFArrayCallBacks {
@@ -93,6 +98,8 @@ extern "C" {
 
     pub fn CFShowStr (str: CFStringRef);
     pub fn CFStringGetCStringPtr(theString: CFStringRef, encoding: CFStringEncoding) -> *const libc::c_char;
+    pub fn CFStringCreateWithCString (alloc: CFRef, source: *const libc::c_char, encoding: kCFStringEncoding) -> CFStringRef;
+
     pub fn CFStringCompare(theString1: CFStringRef, theString2: CFStringRef, compareOptions: CFStringCompareFlags) -> CFComparisonResult;
     pub fn CFArrayRemoveValueAtIndex(theArray: CFMutableArrayRef, idx: CFIndex);
 
