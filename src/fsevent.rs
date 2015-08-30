@@ -59,6 +59,69 @@ bitflags! {
   }
 }
 
+impl std::fmt::Display for StreamFlags {
+  fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    if self.contains(MUST_SCAN_SUBDIRS) {
+      let _d = write!(f, "MUST_SCAN_SUBDIRS ");
+    }
+    if self.contains(USER_DROPPED) {
+      let _d = write!(f, "USER_DROPPED ");
+    }
+    if self.contains(KERNEL_DROPPED) {
+      let _d = write!(f, "KERNEL_DROPPED ");
+    }
+    if self.contains(IDS_WRAPPED) {
+      let _d = write!(f, "IDS_WRAPPED ");
+    }
+    if self.contains(HISTORY_DONE) {
+      let _d = write!(f, "HISTORY_DONE ");
+    }
+    if self.contains(ROOT_CHANGED) {
+      let _d = write!(f, "ROOT_CHANGED ");
+    }
+    if self.contains(MOUNT) {
+      let _d = write!(f, "MOUNT ");
+    }
+    if self.contains(UNMOUNT) {
+      let _d = write!(f, "UNMOUNT ");
+    }
+    if self.contains(ITEM_CREATED) {
+      let _d = write!(f, "ITEM_CREATED ");
+    }
+    if self.contains(ITEM_REMOVED) {
+      let _d = write!(f, "ITEM_REMOVED ");
+    }
+    if self.contains(INOTE_META_MOD) {
+      let _d = write!(f, "INOTE_META_MOD ");
+    }
+    if self.contains(ITEM_RENAMED) {
+      let _d = write!(f, "ITEM_RENAMED ");
+    }
+    if self.contains(ITEM_MODIFIED) {
+      let _d = write!(f, "ITEM_MODIFIED ");
+    }
+    if self.contains(FINDER_INFO_MOD) {
+      let _d = write!(f, "FINDER_INFO_MOD ");
+    }
+    if self.contains(ITEM_CHANGE_OWNER) {
+      let _d = write!(f, "ITEM_CHANGE_OWNER ");
+    }
+    if self.contains(ITEM_XATTR_MOD) {
+      let _d = write!(f, "ITEM_XATTR_MOD ");
+    }
+    if self.contains(IS_FILE) {
+      let _d = write!(f, "IS_FILE ");
+    }
+    if self.contains(IS_DIR) {
+      let _d = write!(f, "IS_DIR ");
+    }
+    if self.contains(IS_SYMLIMK) {
+      let _d = write!(f, "IS_SYMLIMK ");
+    }
+    write!(f, "")
+  }
+}
+
 pub fn is_api_available() -> (bool, String) {
   let ma = cf::system_version_major();
   let mi = cf::system_version_minor();
@@ -91,8 +154,8 @@ impl FsEvent {
       fsevent = FsEvent{
         paths: cf::CFArrayCreateMutable(cf::kCFAllocatorDefault, 0, &cf::kCFTypeArrayCallBacks),
         since_when: fs::kFSEventStreamEventIdSinceNow,
-        latency: 0.1,
-        flags: fs::kFSEventStreamCreateFlagFileEvents,
+        latency: 0.0,
+        flags: fs::kFSEventStreamCreateFlagFileEvents | fs::kFSEventStreamCreateFlagNoDefer,
         sender: sender,
       };
     }
@@ -162,6 +225,7 @@ pub fn callback(
       let i = CStr::from_ptr(paths[p]).to_bytes();
       let flag: StreamFlags = StreamFlags::from_bits(flags[p] as u32)
       .expect(format!("Unable to decode StreamFlags: {}", flags[p] as u32).as_ref());
+      // println!("{}: {}", ids[p], flag);
 
       let path = from_utf8(i).ok().expect("Invalid UTF8 string.");
       let event = Event{event_id: ids[p], flag: flag, path: path.to_string()};
