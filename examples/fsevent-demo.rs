@@ -7,7 +7,7 @@ fn main() {
 
   let _t = thread::spawn(move || {
     let fsevent = fsevent::FsEvent::new(sender);
-    fsevent.append_path("../../");
+    fsevent.append_path(".");
     fsevent.observe();
   });
 

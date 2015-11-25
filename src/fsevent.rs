@@ -34,6 +34,9 @@ pub struct Event {
 
 pub type FsEventCallback = fn(Vec<Event>);
 
+
+// Synchronize with
+// /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/FSEvents.framework/Versions/A/Headers/FSEvents.h
 bitflags! {
   flags StreamFlags: u32 {
     const NONE = 0x00000000,
@@ -56,6 +59,9 @@ bitflags! {
     const IS_FILE = 0x00010000,
     const IS_DIR = 0x00020000,
     const IS_SYMLIMK = 0x00040000,
+    const OWN_EVENT = 0x00080000,
+    const IS_HARDLINK = 0x00100000,
+    const IS_LAST_HARDLINK = 0x0020000
   }
 }
 
@@ -117,6 +123,16 @@ impl std::fmt::Display for StreamFlags {
     }
     if self.contains(IS_SYMLIMK) {
       let _d = write!(f, "IS_SYMLIMK ");
+    }
+    if self.contains(OWN_EVENT) {
+      let _d = write!(f, "OWN_EVENT ");
+    }
+    if self.contains(IS_LAST_HARDLINK) {
+
+      let _d = write!(f, "IS_LAST_HARDLINK ");
+    }
+    if self.contains(IS_HARDLINK) {
+      let _d = write!(f, "IS_HARDLINK ");
     }
     write!(f, "")
   }
@@ -223,11 +239,11 @@ pub fn callback(
 
     for p in (0..num) {
       let i = CStr::from_ptr(paths[p]).to_bytes();
+      let path = from_utf8(i).ok().expect("Invalid UTF8 string.");
       let flag: StreamFlags = StreamFlags::from_bits(flags[p] as u32)
-      .expect(format!("Unable to decode StreamFlags: {}", flags[p] as u32).as_ref());
+      .expect(format!("Unable to decode StreamFlags: {} for {}", flags[p] as u32, path).as_ref());
       // println!("{}: {}", ids[p], flag);
 
-      let path = from_utf8(i).ok().expect("Invalid UTF8 string.");
       let event = Event{event_id: ids[p], flag: flag, path: path.to_string()};
       let _s = (*fs_event).sender.send(event);
     }
