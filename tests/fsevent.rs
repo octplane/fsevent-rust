@@ -9,6 +9,8 @@ use std::fs::OpenOptions;
 use std::fs::read_link;
 use std::path::{Component, PathBuf};
 use std::thread;
+use std::time::Duration;
+
 use std::sync::mpsc::{channel, Receiver};
 use tempdir::TempDir;
 
@@ -21,7 +23,7 @@ fn validate_recv(rx: Receiver<Event>, evs: Vec<(String, StreamFlags)>) {
   while time::precise_time_s() < deadline {
     if let Ok(actual) = rx.try_recv() {
       let mut found: Option<usize> = None;
-      for i in (0..evs.len()) {
+      for i in 0..evs.len() {
         let expected = evs.get(i).unwrap();
         if actual.path == expected.0 && actual.flag == expected.1 {
             found = Some(i);
@@ -135,7 +137,7 @@ fn validate_watch_single_file() {
   {
     let dst = dst.clone();
     let t3 = thread::spawn(move || {
-      thread::sleep_ms(15000); // Wait another 500ms after observe.
+      thread::sleep(Duration::new(15, 0)); // Wait another 500ms after observe.
       let mut file = OpenOptions::new().write(true).append(true).open(dst.as_path()).unwrap();
       file.write_all(b"foo").unwrap();
       file.flush().unwrap();
