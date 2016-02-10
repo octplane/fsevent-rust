@@ -237,7 +237,7 @@ pub fn callback(
     let flags = from_raw_parts_mut(e_ptr, num);
     let ids = from_raw_parts_mut(i_ptr, num);
 
-    for p in (0..num) {
+    for p in 0..num {
       let i = CStr::from_ptr(paths[p]).to_bytes();
       let path = from_utf8(i).ok().expect("Invalid UTF8 string.");
       let flag: StreamFlags = StreamFlags::from_bits(flags[p] as u32)
