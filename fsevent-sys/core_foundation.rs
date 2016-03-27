@@ -145,7 +145,7 @@ pub fn system_version_bugfix() -> SInt32 {
 pub unsafe fn str_path_to_cfstring_ref(source: &str) -> CFStringRef {
   let c_path = CString::new(source).unwrap();
   let c_len = libc::strlen(c_path.as_ptr());
-  let mut url = CFURLCreateFromFileSystemRepresentation(kCFAllocatorDefault, c_path.as_ptr(), c_len as i64, false);
+  let mut url = CFURLCreateFromFileSystemRepresentation(kCFAllocatorDefault, c_path.as_ptr(), c_len as CFIndex, false);
   let mut placeholder = CFURLCopyAbsoluteURL(url);
   CFRelease(url);
 
