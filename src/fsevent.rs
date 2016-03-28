@@ -7,7 +7,6 @@ use fsevent::core_foundation as cf;
 use fsevent::fsevent as fs;
 
 use std::slice;
-use std::mem::transmute;
 use std::slice::from_raw_parts_mut;
 use std::str::from_utf8;
 use std::ffi::CStr;
