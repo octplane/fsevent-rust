@@ -16,4 +16,7 @@ cf examples/ folder.
 
 # Contributors
 
+- Mathieu Poumeyrol @kali
+- ShuYu Wang @andelf
 - Jake Kerr @jakerr
+- Jorge Aparicio @japaric
