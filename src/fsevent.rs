@@ -60,7 +60,7 @@ bitflags! {
     const IS_SYMLIMK = 0x00040000,
     const OWN_EVENT = 0x00080000,
     const IS_HARDLINK = 0x00100000,
-    const IS_LAST_HARDLINK = 0x0020000
+    const IS_LAST_HARDLINK = 0x00200000
   }
 }
 
