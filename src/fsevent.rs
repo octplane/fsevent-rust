@@ -37,7 +37,7 @@ pub type FsEventCallback = fn(Vec<Event>);
 // Synchronize with
 // /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/FSEvents.framework/Versions/A/Headers/FSEvents.h
 bitflags! {
-  flags StreamFlags: u32 {
+  pub flags StreamFlags: u32 {
     const NONE = 0x00000000,
     const MUST_SCAN_SUBDIRS = 0x00000001,
     const USER_DROPPED = 0x00000002,
