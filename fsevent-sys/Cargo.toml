@@ -1,9 +1,9 @@
 [package]
 name = "fsevent-sys"
-version = "0.1.5"
+version = "0.1.6"
 authors = ["Pierre Baillet <pierre@baillet.name>"]
 description = "Rust bindings to the fsevent OSX API for file changes notifications"
-license-file = "LICENSE"
+license = "MIT"
 repository = "https://github.com/octplane/fsevent-rust/tree/master/fsevent-sys"
 
 
@@ -12,4 +12,4 @@ name = "fsevent_sys"
 path = "lib.rs"
 
 [dependencies]
-libc = "0.2.9"
+libc = "0.2.20"
