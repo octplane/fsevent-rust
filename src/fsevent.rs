@@ -60,7 +60,8 @@ bitflags! {
     const IS_SYMLIMK = 0x00040000,
     const OWN_EVENT = 0x00080000,
     const IS_HARDLINK = 0x00100000,
-    const IS_LAST_HARDLINK = 0x00200000
+    const IS_LAST_HARDLINK = 0x00200000,
+    const ITEM_CLONED = 0x400000
   }
 }
 
@@ -127,11 +128,14 @@ impl std::fmt::Display for StreamFlags {
       let _d = write!(f, "OWN_EVENT ");
     }
     if self.contains(IS_LAST_HARDLINK) {
-
       let _d = write!(f, "IS_LAST_HARDLINK ");
     }
     if self.contains(IS_HARDLINK) {
       let _d = write!(f, "IS_HARDLINK ");
+    }
+    if self.contains(ITEM_CLONED) {
+      let 
+      _d = write!(f, "ITEM_CLONED ");
     }
     write!(f, "")
   }
