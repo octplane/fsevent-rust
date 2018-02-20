@@ -1,6 +1,7 @@
 # FSEvent API for Rust
 
-Original Author Pierre Baillet @octplane
+Original Author:
+- Pierre Baillet @octplane
 
 # Installation
 
@@ -20,3 +21,4 @@ cf examples/ folder.
 - ShuYu Wang @andelf
 - Jake Kerr @jakerr
 - Jorge Aparicio @japaric
+- Markus Westerlind @Marwes
