@@ -6,6 +6,7 @@ extern crate libc;
 use fsevent::core_foundation as cf;
 use fsevent::fsevent as fs;
 
+use std::ptr;
 use std::slice;
 use std::slice::from_raw_parts_mut;
 use std::str::from_utf8;
@@ -165,6 +166,25 @@ fn default_stream_context(info: *const FsEvent) -> fs::FSEventStreamContext {
   stream_context
 }
 
+pub type Result<T> = std::result::Result<T, Error>;
+
+#[derive(Debug)]
+pub struct Error {
+    msg: String,
+}
+
+impl std::error::Error for Error {
+    fn description(&self) -> &str {
+        &self.msg
+    }
+}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        self.msg.fmt(f)
+    }
+}
+
 impl FsEvent {
   pub fn new(sender: Sender<Event>) -> FsEvent {
     let fsevent: FsEvent;
@@ -184,11 +204,19 @@ impl FsEvent {
 
 
   // https://github.com/thibaudgg/rb-fsevent/blob/master/ext/fsevent_watch/main.c
-  pub fn append_path(&self,source: &str) {
+  pub fn append_path(&self,source: &str) -> Result<()> {
     unsafe {
-      let cf_path = cf::str_path_to_cfstring_ref(source);
+      let mut err = ptr::null_mut();
+      let cf_path = cf::str_path_to_cfstring_ref(source, &mut err);
+      if err != ptr::null_mut() {
+          let cf_str = cf::CFCopyDescription(err as cf::CFRef);
+          let mut buf = [0; 1024];
+          cf::CFStringGetCString(cf_str, buf.as_mut_ptr(), buf.len() as cf::CFIndex, cf::kCFStringEncodingUTF8);
+          return Err(Error { msg: CStr::from_ptr(buf.as_ptr()).to_str().unwrap_or("Unknown error").to_string() });
+      }
       cf::CFArrayAppendValue(self.paths, cf_path);
       cf::CFRelease(cf_path);
+      Ok(())
     }
   }
   pub fn observe(&self) {

@@ -97,9 +97,9 @@ fn observe_folder() {
   {
     let _t = thread::spawn(move || {
       let fsevent = fsevent::FsEvent::new(sender);
-      fsevent.append_path(dst1.as_path().to_str().unwrap());
-      fsevent.append_path(dst2.as_path().to_str().unwrap());
-      fsevent.append_path(dst3.as_path().to_str().unwrap());
+      fsevent.append_path(dst1.as_path().to_str().unwrap()).unwrap();
+      fsevent.append_path(dst2.as_path().to_str().unwrap()).unwrap();
+      fsevent.append_path(dst3.as_path().to_str().unwrap()).unwrap();
       fsevent.observe();
     });
   }
@@ -129,7 +129,7 @@ fn validate_watch_single_file() {
     let dst = dst.clone();
     let _t = thread::spawn(move || {
       let fsevent = fsevent::FsEvent::new(sender);
-      fsevent.append_path(dst.as_path().to_str().unwrap());
+      fsevent.append_path(dst.as_path().to_str().unwrap()).unwrap();
       fsevent.observe();
     });
   }

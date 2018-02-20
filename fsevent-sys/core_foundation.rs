@@ -3,6 +3,8 @@
 extern crate libc;
 
 use std::ffi::CString;
+use std::str;
+use std::ptr;
 
 pub type UInt32 = libc::c_uint;
 pub type SInt16 = libc::c_short;
@@ -22,9 +24,12 @@ pub type CFRef = *mut libc::c_void;
 pub type CFIndex = libc::c_long;
 pub type CFTimeInterval = f64;
 
+#[doc(hidden)]
+pub enum CFError {}
+
 pub type CFMutableArrayRef = CFRef;
 pub type CFURLRef = CFRef;
-pub type CFErrorRef = CFRef;
+pub type CFErrorRef = *mut CFError;
 pub type CFStringRef = CFRef;
 pub type CFRunLoopRef = CFRef;
 
@@ -73,6 +78,7 @@ extern "C" {
     pub fn Gestalt(selector: OSType, response: *const SInt32) -> OSErr;
     pub fn CFRelease(res: CFRef);
     pub fn CFShow(res: CFRef);
+    pub fn CFCopyDescription(cf: CFRef) -> CFStringRef;
 
     pub fn CFRunLoopRun();
     pub fn CFRunLoopStop(run_loop: CFRunLoopRef);
@@ -85,8 +91,8 @@ extern "C" {
     pub fn CFArrayGetCount(arr: CFMutableArrayRef) -> CFIndex;
     pub fn CFArrayGetValueAtIndex(arr: CFMutableArrayRef, index: CFIndex) -> CFRef;
 
-    pub fn CFURLCreateFileReferenceURL(allocator: CFRef, url: CFURLRef, err: CFRef) -> CFURLRef;
-    pub fn CFURLCreateFilePathURL(allocator: CFRef, url: CFURLRef, err: CFRef) ->CFURLRef;
+    pub fn CFURLCreateFileReferenceURL(allocator: CFRef, url: CFURLRef, err: *mut CFErrorRef) -> CFURLRef;
+    pub fn CFURLCreateFilePathURL(allocator: CFRef, url: CFURLRef, err: *mut CFErrorRef) ->CFURLRef;
     pub fn CFURLCreateFromFileSystemRepresentation(allocator: CFRef, path: *const libc::c_char, len: CFIndex, is_directory: bool) -> CFURLRef;
     pub fn CFURLCopyAbsoluteURL(res: CFURLRef) -> CFURLRef;
     pub fn CFURLCopyLastPathComponent(res: CFURLRef) -> CFStringRef;
@@ -97,6 +103,7 @@ extern "C" {
     pub fn CFURLResourceIsReachable(res: CFURLRef, err: *mut CFErrorRef) -> bool;
 
     pub fn CFShowStr (str: CFStringRef);
+    pub fn CFStringGetCString(theString: CFStringRef, buffer: *mut libc::c_char, buffer_size: CFIndex, encoding: CFStringEncoding) -> bool;
     pub fn CFStringGetCStringPtr(theString: CFStringRef, encoding: CFStringEncoding) -> *const libc::c_char;
     pub fn CFStringCreateWithCString (alloc: CFRef, source: *const libc::c_char, encoding: kCFStringEncoding) -> CFStringRef;
 
@@ -142,7 +149,7 @@ pub fn system_version_bugfix() -> SInt32 {
 
 }
 
-pub unsafe fn str_path_to_cfstring_ref(source: &str) -> CFStringRef {
+pub unsafe fn str_path_to_cfstring_ref(source: &str, err: &mut CFErrorRef) -> CFStringRef {
   let c_path = CString::new(source).unwrap();
   let c_len = libc::strlen(c_path.as_ptr());
   let mut url = CFURLCreateFromFileSystemRepresentation(kCFAllocatorDefault, c_path.as_ptr(), c_len as CFIndex, false);
@@ -151,7 +158,7 @@ pub unsafe fn str_path_to_cfstring_ref(source: &str) -> CFStringRef {
 
   let imaginary: CFRef = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 
-  while !CFURLResourceIsReachable(placeholder, NULL_REF_PTR) {
+  while !CFURLResourceIsReachable(placeholder, ptr::null_mut()) {
     let child = CFURLCopyLastPathComponent(placeholder);
     CFArrayInsertValueAtIndex(imaginary, 0, child);
     CFRelease(child);
@@ -161,9 +168,17 @@ pub unsafe fn str_path_to_cfstring_ref(source: &str) -> CFStringRef {
     placeholder = url;
   }
 
-  url = CFURLCreateFileReferenceURL(kCFAllocatorDefault, placeholder, kCFAllocatorDefault);
+  url = CFURLCreateFileReferenceURL(kCFAllocatorDefault, placeholder, err);
+  if *err != ptr::null_mut() {
+      return ptr::null_mut();
+  }
+
   CFRelease(placeholder);
-  placeholder = CFURLCreateFilePathURL(kCFAllocatorDefault, url, kCFAllocatorDefault);
+  placeholder = CFURLCreateFilePathURL(kCFAllocatorDefault, url, err);
+  if *err != ptr::null_mut() {
+      return ptr::null_mut();
+  }
+
   CFRelease(url);
 
   if imaginary != kCFAllocatorDefault {
