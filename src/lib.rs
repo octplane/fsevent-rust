@@ -268,7 +268,7 @@ impl FsEvent {
 }
 
 #[allow(unused_variables)]
-pub unsafe fn callback(
+unsafe fn callback(
     stream_ref: fs::FSEventStreamRef,
     info: *mut libc::c_void,
     num_events: libc::size_t,                // size_t numEvents
