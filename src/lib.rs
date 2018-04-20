@@ -33,8 +33,6 @@ pub struct Event {
     pub path: String,
 }
 
-pub type FsEventCallback = fn(Vec<Event>);
-
 // Synchronize with
 // /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/FSEvents.framework/Versions/A/Headers/FSEvents.h
 bitflags! {
