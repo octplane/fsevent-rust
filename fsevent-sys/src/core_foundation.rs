@@ -237,7 +237,7 @@ pub unsafe fn str_path_to_cfstring_ref(source: &str, err: &mut CFErrorRef) -> CF
             );
             CFRelease(placeholder);
             placeholder = url;
-            count = count + 1;
+            count += 1;
         }
         CFRelease(imaginary);
     }
