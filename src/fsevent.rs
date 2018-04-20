@@ -253,7 +253,7 @@ impl FsEvent {
 }
 
 #[allow(unused_variables)]
-pub fn callback(
+pub unsafe fn callback(
     stream_ref: fs::FSEventStreamRef,
     info: *mut libc::c_void,
     num_events: libc::size_t,      // size_t numEvents
@@ -266,20 +266,18 @@ pub fn callback(
   let i_ptr = event_ids as *mut u64;
   let fs_event = info as *mut FsEvent;
 
-  unsafe {
-    let paths: &[*const libc::c_char] = std::mem::transmute(slice::from_raw_parts(event_paths, num));
-    let flags = from_raw_parts_mut(e_ptr, num);
-    let ids = from_raw_parts_mut(i_ptr, num);
+  let paths: &[*const libc::c_char] = std::mem::transmute(slice::from_raw_parts(event_paths, num));
+  let flags = from_raw_parts_mut(e_ptr, num);
+  let ids = from_raw_parts_mut(i_ptr, num);
 
-    for p in 0..num {
-      let i = CStr::from_ptr(paths[p]).to_bytes();
-      let path = from_utf8(i).expect("Invalid UTF8 string.");
-      let flag: StreamFlags = StreamFlags::from_bits(flags[p] as u32)
-      .expect(format!("Unable to decode StreamFlags: {} for {}", flags[p] as u32, path).as_ref());
-      // println!("{}: {}", ids[p], flag);
+  for p in 0..num {
+    let i = CStr::from_ptr(paths[p]).to_bytes();
+    let path = from_utf8(i).expect("Invalid UTF8 string.");
+    let flag: StreamFlags = StreamFlags::from_bits(flags[p] as u32)
+    .expect(format!("Unable to decode StreamFlags: {} for {}", flags[p] as u32, path).as_ref());
+    // println!("{}: {}", ids[p], flag);
 
-      let event = Event{event_id: ids[p], flag: flag, path: path.to_string()};
-      let _s = (*fs_event).sender.send(event);
-    }
+    let event = Event{event_id: ids[p], flag: flag, path: path.to_string()};
+    let _s = (*fs_event).sender.send(event);
   }
 }
