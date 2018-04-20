@@ -6,7 +6,7 @@ extern crate bitflags;
 extern crate fsevent_sys as fsevent;
 
 use fsevent::core_foundation as cf;
-use fsevent::fsevent as fs;
+use fsevent as fs;
 
 use std::convert::AsRef;
 use std::ffi::CStr;
