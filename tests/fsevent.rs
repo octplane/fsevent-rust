@@ -105,9 +105,9 @@ fn observe_folder() {
   }
 
   validate_recv(receiver, vec![
-    (ddst1.to_str().unwrap().to_string(), ITEM_CREATED | IS_DIR),
-    (ddst2.to_str().unwrap().to_string(), ITEM_CREATED | IS_DIR),
-    (ddst3.to_str().unwrap().to_string(), ITEM_CREATED | IS_DIR)
+    (ddst1.to_str().unwrap().to_string(), StreamFlags::ITEM_CREATED | StreamFlags::IS_DIR),
+    (ddst2.to_str().unwrap().to_string(), StreamFlags::ITEM_CREATED | StreamFlags::IS_DIR),
+    (ddst3.to_str().unwrap().to_string(), StreamFlags::ITEM_CREATED | StreamFlags::IS_DIR)
   ]);
 
 }
@@ -146,5 +146,5 @@ fn validate_watch_single_file() {
   }
 
   validate_recv(receiver, vec![
-    (dst.to_str().unwrap().to_string(), ITEM_MODIFIED | ITEM_CREATED | IS_FILE)]);
+    (dst.to_str().unwrap().to_string(), StreamFlags::ITEM_MODIFIED | StreamFlags::ITEM_CREATED | StreamFlags::IS_FILE)]);
 }
