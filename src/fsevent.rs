@@ -273,7 +273,7 @@ pub fn callback(
 
     for p in 0..num {
       let i = CStr::from_ptr(paths[p]).to_bytes();
-      let path = from_utf8(i).ok().expect("Invalid UTF8 string.");
+      let path = from_utf8(i).expect("Invalid UTF8 string.");
       let flag: StreamFlags = StreamFlags::from_bits(flags[p] as u32)
       .expect(format!("Unable to decode StreamFlags: {} for {}", flags[p] as u32, path).as_ref());
       // println!("{}: {}", ids[p], flag);
