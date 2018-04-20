@@ -3,16 +3,16 @@ use std::sync::mpsc::channel;
 use std::thread;
 
 fn main() {
-  let (sender, receiver) = channel();
+    let (sender, receiver) = channel();
 
-  let _t = thread::spawn(move || {
-    let fsevent = fsevent::FsEvent::new(sender);
-    fsevent.append_path(".").unwrap();
-    fsevent.observe();
-  });
+    let _t = thread::spawn(move || {
+        let fsevent = fsevent::FsEvent::new(sender);
+        fsevent.append_path(".").unwrap();
+        fsevent.observe();
+    });
 
-  loop {
-    let val = receiver.recv();
-    println!("{:?}", val.unwrap());
-  }
+    loop {
+        let val = receiver.recv();
+        println!("{:?}", val.unwrap());
+    }
 }

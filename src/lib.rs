@@ -1,6 +1,7 @@
 #![cfg_attr(feature = "cargo-clippy", allow(unreadable_literal))]
 
-#[macro_use] extern crate bitflags;
+#[macro_use]
+extern crate bitflags;
 
 extern crate fsevent_sys as fsevent;
 extern crate libc;
@@ -8,34 +9,33 @@ extern crate libc;
 use fsevent::core_foundation as cf;
 use fsevent::fsevent as fs;
 
+use std::convert::AsRef;
+use std::ffi::CStr;
 use std::ptr;
 use std::slice;
 use std::slice::from_raw_parts_mut;
 use std::str::from_utf8;
-use std::ffi::CStr;
-use std::convert::AsRef;
 
-use std::sync::mpsc::{Sender};
+use std::sync::mpsc::Sender;
 
 pub const NULL: cf::CFRef = cf::NULL;
 
 pub struct FsEvent {
-  paths: cf::CFMutableArrayRef,
-  since_when: fs::FSEventStreamEventId,
-  latency: cf::CFTimeInterval,
-  flags: fs::FSEventStreamCreateFlags,
-  sender: Sender<Event>,
+    paths: cf::CFMutableArrayRef,
+    since_when: fs::FSEventStreamEventId,
+    latency: cf::CFTimeInterval,
+    flags: fs::FSEventStreamCreateFlags,
+    sender: Sender<Event>,
 }
 
 #[derive(Debug)]
 pub struct Event {
-  pub event_id: u64,
-  pub flag: StreamFlags,
-  pub path: String,
+    pub event_id: u64,
+    pub flag: StreamFlags,
+    pub path: String,
 }
 
 pub type FsEventCallback = fn(Vec<Event>);
-
 
 // Synchronize with
 // /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/FSEvents.framework/Versions/A/Headers/FSEvents.h
@@ -70,102 +70,102 @@ bitflags! {
 }
 
 impl std::fmt::Display for StreamFlags {
-  fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-    if self.contains(StreamFlags::MUST_SCAN_SUBDIRS) {
-      let _d = write!(f, "MUST_SCAN_SUBDIRS ");
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        if self.contains(StreamFlags::MUST_SCAN_SUBDIRS) {
+            let _d = write!(f, "MUST_SCAN_SUBDIRS ");
+        }
+        if self.contains(StreamFlags::USER_DROPPED) {
+            let _d = write!(f, "USER_DROPPED ");
+        }
+        if self.contains(StreamFlags::KERNEL_DROPPED) {
+            let _d = write!(f, "KERNEL_DROPPED ");
+        }
+        if self.contains(StreamFlags::IDS_WRAPPED) {
+            let _d = write!(f, "IDS_WRAPPED ");
+        }
+        if self.contains(StreamFlags::HISTORY_DONE) {
+            let _d = write!(f, "HISTORY_DONE ");
+        }
+        if self.contains(StreamFlags::ROOT_CHANGED) {
+            let _d = write!(f, "ROOT_CHANGED ");
+        }
+        if self.contains(StreamFlags::MOUNT) {
+            let _d = write!(f, "MOUNT ");
+        }
+        if self.contains(StreamFlags::UNMOUNT) {
+            let _d = write!(f, "UNMOUNT ");
+        }
+        if self.contains(StreamFlags::ITEM_CREATED) {
+            let _d = write!(f, "ITEM_CREATED ");
+        }
+        if self.contains(StreamFlags::ITEM_REMOVED) {
+            let _d = write!(f, "ITEM_REMOVED ");
+        }
+        if self.contains(StreamFlags::INOTE_META_MOD) {
+            let _d = write!(f, "INOTE_META_MOD ");
+        }
+        if self.contains(StreamFlags::ITEM_RENAMED) {
+            let _d = write!(f, "ITEM_RENAMED ");
+        }
+        if self.contains(StreamFlags::ITEM_MODIFIED) {
+            let _d = write!(f, "ITEM_MODIFIED ");
+        }
+        if self.contains(StreamFlags::FINDER_INFO_MOD) {
+            let _d = write!(f, "FINDER_INFO_MOD ");
+        }
+        if self.contains(StreamFlags::ITEM_CHANGE_OWNER) {
+            let _d = write!(f, "ITEM_CHANGE_OWNER ");
+        }
+        if self.contains(StreamFlags::ITEM_XATTR_MOD) {
+            let _d = write!(f, "ITEM_XATTR_MOD ");
+        }
+        if self.contains(StreamFlags::IS_FILE) {
+            let _d = write!(f, "IS_FILE ");
+        }
+        if self.contains(StreamFlags::IS_DIR) {
+            let _d = write!(f, "IS_DIR ");
+        }
+        if self.contains(StreamFlags::IS_SYMLIMK) {
+            let _d = write!(f, "IS_SYMLIMK ");
+        }
+        if self.contains(StreamFlags::OWN_EVENT) {
+            let _d = write!(f, "OWN_EVENT ");
+        }
+        if self.contains(StreamFlags::IS_LAST_HARDLINK) {
+            let _d = write!(f, "IS_LAST_HARDLINK ");
+        }
+        if self.contains(StreamFlags::IS_HARDLINK) {
+            let _d = write!(f, "IS_HARDLINK ");
+        }
+        if self.contains(StreamFlags::ITEM_CLONED) {
+            let _d = write!(f, "ITEM_CLONED ");
+        }
+        write!(f, "")
     }
-    if self.contains(StreamFlags::USER_DROPPED) {
-      let _d = write!(f, "USER_DROPPED ");
-    }
-    if self.contains(StreamFlags::KERNEL_DROPPED) {
-      let _d = write!(f, "KERNEL_DROPPED ");
-    }
-    if self.contains(StreamFlags::IDS_WRAPPED) {
-      let _d = write!(f, "IDS_WRAPPED ");
-    }
-    if self.contains(StreamFlags::HISTORY_DONE) {
-      let _d = write!(f, "HISTORY_DONE ");
-    }
-    if self.contains(StreamFlags::ROOT_CHANGED) {
-      let _d = write!(f, "ROOT_CHANGED ");
-    }
-    if self.contains(StreamFlags::MOUNT) {
-      let _d = write!(f, "MOUNT ");
-    }
-    if self.contains(StreamFlags::UNMOUNT) {
-      let _d = write!(f, "UNMOUNT ");
-    }
-    if self.contains(StreamFlags::ITEM_CREATED) {
-      let _d = write!(f, "ITEM_CREATED ");
-    }
-    if self.contains(StreamFlags::ITEM_REMOVED) {
-      let _d = write!(f, "ITEM_REMOVED ");
-    }
-    if self.contains(StreamFlags::INOTE_META_MOD) {
-      let _d = write!(f, "INOTE_META_MOD ");
-    }
-    if self.contains(StreamFlags::ITEM_RENAMED) {
-      let _d = write!(f, "ITEM_RENAMED ");
-    }
-    if self.contains(StreamFlags::ITEM_MODIFIED) {
-      let _d = write!(f, "ITEM_MODIFIED ");
-    }
-    if self.contains(StreamFlags::FINDER_INFO_MOD) {
-      let _d = write!(f, "FINDER_INFO_MOD ");
-    }
-    if self.contains(StreamFlags::ITEM_CHANGE_OWNER) {
-      let _d = write!(f, "ITEM_CHANGE_OWNER ");
-    }
-    if self.contains(StreamFlags::ITEM_XATTR_MOD) {
-      let _d = write!(f, "ITEM_XATTR_MOD ");
-    }
-    if self.contains(StreamFlags::IS_FILE) {
-      let _d = write!(f, "IS_FILE ");
-    }
-    if self.contains(StreamFlags::IS_DIR) {
-      let _d = write!(f, "IS_DIR ");
-    }
-    if self.contains(StreamFlags::IS_SYMLIMK) {
-      let _d = write!(f, "IS_SYMLIMK ");
-    }
-    if self.contains(StreamFlags::OWN_EVENT) {
-      let _d = write!(f, "OWN_EVENT ");
-    }
-    if self.contains(StreamFlags::IS_LAST_HARDLINK) {
-      let _d = write!(f, "IS_LAST_HARDLINK ");
-    }
-    if self.contains(StreamFlags::IS_HARDLINK) {
-      let _d = write!(f, "IS_HARDLINK ");
-    }
-    if self.contains(StreamFlags::ITEM_CLONED) {
-      let 
-      _d = write!(f, "ITEM_CLONED ");
-    }
-    write!(f, "")
-  }
 }
 
 pub fn is_api_available() -> (bool, String) {
-  let ma = cf::system_version_major();
-  let mi = cf::system_version_minor();
+    let ma = cf::system_version_major();
+    let mi = cf::system_version_minor();
 
-  if ma == 10 && mi < 5 {
-    (false, "This version of OSX does not support the FSEvent library, cannot proceed".to_string())
-  } else {
-    (true, "ok".to_string())
-  }
+    if ma == 10 && mi < 5 {
+        (
+            false,
+            "This version of OSX does not support the FSEvent library, cannot proceed".to_string(),
+        )
+    } else {
+        (true, "ok".to_string())
+    }
 }
 
-
-
 fn default_stream_context(info: *const FsEvent) -> fs::FSEventStreamContext {
-  let ptr = info as *mut libc::c_void;
-  fs::FSEventStreamContext {
-    version: 0,
-    info: ptr,
-    retain: cf::NULL,
-    copy_description: cf::NULL
-  }
+    let ptr = info as *mut libc::c_void;
+    fs::FSEventStreamContext {
+        version: 0,
+        info: ptr,
+        retain: cf::NULL,
+        copy_description: cf::NULL,
+    }
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -188,96 +188,120 @@ impl std::fmt::Display for Error {
 }
 
 impl FsEvent {
-  pub fn new(sender: Sender<Event>) -> FsEvent {
-    let fsevent: FsEvent;
+    pub fn new(sender: Sender<Event>) -> FsEvent {
+        let fsevent: FsEvent;
 
-    unsafe {
-      fsevent = FsEvent{
-        paths: cf::CFArrayCreateMutable(cf::kCFAllocatorDefault, 0, &cf::kCFTypeArrayCallBacks),
-        since_when: fs::kFSEventStreamEventIdSinceNow,
-        latency: 0.0,
-        flags: fs::kFSEventStreamCreateFlagFileEvents | fs::kFSEventStreamCreateFlagNoDefer,
-        sender,
-      };
+        unsafe {
+            fsevent = FsEvent {
+                paths: cf::CFArrayCreateMutable(
+                    cf::kCFAllocatorDefault,
+                    0,
+                    &cf::kCFTypeArrayCallBacks,
+                ),
+                since_when: fs::kFSEventStreamEventIdSinceNow,
+                latency: 0.0,
+                flags: fs::kFSEventStreamCreateFlagFileEvents | fs::kFSEventStreamCreateFlagNoDefer,
+                sender,
+            };
+        }
+        fsevent
     }
-    fsevent
-  }
 
-
-
-  // https://github.com/thibaudgg/rb-fsevent/blob/master/ext/fsevent_watch/main.c
-  pub fn append_path(&self,source: &str) -> Result<()> {
-    unsafe {
-      let mut err = ptr::null_mut();
-      let cf_path = cf::str_path_to_cfstring_ref(source, &mut err);
-      if !err.is_null() {
-          let cf_str = cf::CFCopyDescription(err as cf::CFRef);
-          let mut buf = [0; 1024];
-          cf::CFStringGetCString(cf_str, buf.as_mut_ptr(), buf.len() as cf::CFIndex, cf::kCFStringEncodingUTF8);
-          Err(Error { msg: CStr::from_ptr(buf.as_ptr()).to_str().unwrap_or("Unknown error").to_string() })
-      } else {
-          cf::CFArrayAppendValue(self.paths, cf_path);
-          cf::CFRelease(cf_path);
-          Ok(())
-      }
+    // https://github.com/thibaudgg/rb-fsevent/blob/master/ext/fsevent_watch/main.c
+    pub fn append_path(&self, source: &str) -> Result<()> {
+        unsafe {
+            let mut err = ptr::null_mut();
+            let cf_path = cf::str_path_to_cfstring_ref(source, &mut err);
+            if !err.is_null() {
+                let cf_str = cf::CFCopyDescription(err as cf::CFRef);
+                let mut buf = [0; 1024];
+                cf::CFStringGetCString(
+                    cf_str,
+                    buf.as_mut_ptr(),
+                    buf.len() as cf::CFIndex,
+                    cf::kCFStringEncodingUTF8,
+                );
+                Err(Error {
+                    msg: CStr::from_ptr(buf.as_ptr())
+                        .to_str()
+                        .unwrap_or("Unknown error")
+                        .to_string(),
+                })
+            } else {
+                cf::CFArrayAppendValue(self.paths, cf_path);
+                cf::CFRelease(cf_path);
+                Ok(())
+            }
+        }
     }
-  }
-  pub fn observe(&self) {
-    let stream_context = default_stream_context(self);
+    pub fn observe(&self) {
+        let stream_context = default_stream_context(self);
 
-    let cb = callback as *mut _;
+        let cb = callback as *mut _;
 
-    unsafe {
-      let stream = fs::FSEventStreamCreate(cf::kCFAllocatorDefault,
-       cb,
-       &stream_context,
-       self.paths,
-       self.since_when,
-       self.latency,
-       self.flags);
+        unsafe {
+            let stream = fs::FSEventStreamCreate(
+                cf::kCFAllocatorDefault,
+                cb,
+                &stream_context,
+                self.paths,
+                self.since_when,
+                self.latency,
+                self.flags,
+            );
 
-      // fs::FSEventStreamShow(stream);
+            // fs::FSEventStreamShow(stream);
 
-      fs::FSEventStreamScheduleWithRunLoop(stream,
-        cf::CFRunLoopGetCurrent(),
-        cf::kCFRunLoopDefaultMode);
+            fs::FSEventStreamScheduleWithRunLoop(
+                stream,
+                cf::CFRunLoopGetCurrent(),
+                cf::kCFRunLoopDefaultMode,
+            );
 
-      fs::FSEventStreamStart(stream);
-      cf::CFRunLoopRun();
+            fs::FSEventStreamStart(stream);
+            cf::CFRunLoopRun();
 
-      fs::FSEventStreamFlushSync(stream);
-      fs::FSEventStreamStop(stream);
-
+            fs::FSEventStreamFlushSync(stream);
+            fs::FSEventStreamStop(stream);
+        }
     }
-  }
 }
 
 #[allow(unused_variables)]
 pub unsafe fn callback(
     stream_ref: fs::FSEventStreamRef,
     info: *mut libc::c_void,
-    num_events: libc::size_t,      // size_t numEvents
+    num_events: libc::size_t,                // size_t numEvents
     event_paths: *const *const libc::c_char, // void *eventPaths
-    event_flags: *mut libc::c_void, // const FSEventStreamEventFlags eventFlags[]
-    event_ids: *mut libc::c_void,  // const FSEventStreamEventId eventIds[]
-  ) {
-  let num = num_events as usize;
-  let e_ptr = event_flags as *mut u32;
-  let i_ptr = event_ids as *mut u64;
-  let fs_event = info as *mut FsEvent;
+    event_flags: *mut libc::c_void,          // const FSEventStreamEventFlags eventFlags[]
+    event_ids: *mut libc::c_void,            // const FSEventStreamEventId eventIds[]
+) {
+    let num = num_events as usize;
+    let e_ptr = event_flags as *mut u32;
+    let i_ptr = event_ids as *mut u64;
+    let fs_event = info as *mut FsEvent;
 
-  let paths: &[*const libc::c_char] = std::mem::transmute(slice::from_raw_parts(event_paths, num));
-  let flags = from_raw_parts_mut(e_ptr, num);
-  let ids = from_raw_parts_mut(i_ptr, num);
+    let paths: &[*const libc::c_char] =
+        std::mem::transmute(slice::from_raw_parts(event_paths, num));
+    let flags = from_raw_parts_mut(e_ptr, num);
+    let ids = from_raw_parts_mut(i_ptr, num);
 
-  for p in 0..num {
-    let i = CStr::from_ptr(paths[p]).to_bytes();
-    let path = from_utf8(i).expect("Invalid UTF8 string.");
-    let flag: StreamFlags = StreamFlags::from_bits(flags[p] as u32)
-    .expect(format!("Unable to decode StreamFlags: {} for {}", flags[p] as u32, path).as_ref());
-    // println!("{}: {}", ids[p], flag);
+    for p in 0..num {
+        let i = CStr::from_ptr(paths[p]).to_bytes();
+        let path = from_utf8(i).expect("Invalid UTF8 string.");
+        let flag: StreamFlags = StreamFlags::from_bits(flags[p] as u32).expect(
+            format!(
+                "Unable to decode StreamFlags: {} for {}",
+                flags[p] as u32, path
+            ).as_ref(),
+        );
+        // println!("{}: {}", ids[p], flag);
 
-    let event = Event{event_id: ids[p], flag, path: path.to_string()};
-    let _s = (*fs_event).sender.send(event);
-  }
+        let event = Event {
+            event_id: ids[p],
+            flag,
+            path: path.to_string(),
+        };
+        let _s = (*fs_event).sender.send(event);
+    }
 }
