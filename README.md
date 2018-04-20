@@ -22,3 +22,4 @@ cf examples/ folder.
 - Jake Kerr @jakerr
 - Jorge Aparicio @japaric
 - Markus Westerlind @Marwes
+- Bruce Mitchener @waywardmonkeys
