@@ -6,19 +6,6 @@ use std::ffi::CString;
 use std::ptr;
 use std::str;
 
-pub type UInt32 = ::std::os::raw::c_uint;
-pub type SInt16 = ::std::os::raw::c_short;
-pub type SInt32 = ::std::os::raw::c_int;
-
-pub type FourCharCode = UInt32;
-pub type OSType = FourCharCode;
-pub type OSErr = SInt16;
-
-pub const gestaltSystemVersion: ::std::os::raw::c_uint = 1937339254;
-pub const gestaltSystemVersionMajor: ::std::os::raw::c_uint = 1937339185;
-pub const gestaltSystemVersionMinor: ::std::os::raw::c_uint = 1937339186;
-pub const gestaltSystemVersionBugFix: ::std::os::raw::c_uint = 1937339187;
-
 pub type CFRef = *mut ::std::os::raw::c_void;
 
 pub type CFIndex = ::std::os::raw::c_long;
@@ -72,7 +59,6 @@ extern "C" {
     pub static kCFTypeArrayCallBacks: CFArrayCallBacks;
     pub static kCFRunLoopDefaultMode: CFStringRef;
 
-    pub fn Gestalt(selector: OSType, response: *const SInt32) -> OSErr;
     pub fn CFRelease(res: CFRef);
     pub fn CFShow(res: CFRef);
     pub fn CFCopyDescription(cf: CFRef) -> CFStringRef;
@@ -144,48 +130,6 @@ extern "C" {
     ) -> CFComparisonResult;
     pub fn CFArrayRemoveValueAtIndex(theArray: CFMutableArrayRef, idx: CFIndex);
 
-}
-
-pub fn system_version_major() -> SInt32 {
-    unsafe {
-        let ret: SInt32 = 0;
-        let err = Gestalt(gestaltSystemVersionMajor, &ret);
-        if err != 0 {
-            panic!(
-                "Gestalt call failed with error {} for gestaltSystemVersionMajor",
-                err
-            );
-        }
-        ret
-    }
-}
-
-pub fn system_version_minor() -> SInt32 {
-    unsafe {
-        let ret: SInt32 = 0;
-        let err = Gestalt(gestaltSystemVersionMinor, &ret);
-        if err != 0 {
-            panic!(
-                "Gestalt call failed with error {} for gestaltSystemVersionMinor",
-                err
-            );
-        }
-        ret
-    }
-}
-
-pub fn system_version_bugfix() -> SInt32 {
-    unsafe {
-        let ret: SInt32 = 0;
-        let err = Gestalt(gestaltSystemVersionBugFix, &ret);
-        if err != 0 {
-            panic!(
-                "Gestalt call failed with error {} for gestaltSystemVersionBugFix",
-                err
-            );
-        }
-        ret
-    }
 }
 
 pub unsafe fn str_path_to_cfstring_ref(source: &str, err: &mut CFErrorRef) -> CFStringRef {
