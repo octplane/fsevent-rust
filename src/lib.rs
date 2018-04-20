@@ -142,17 +142,17 @@ impl std::fmt::Display for StreamFlags {
     }
 }
 
-pub fn is_api_available() -> (bool, String) {
+pub fn is_api_available() -> (bool, &'static str) {
     let ma = cf::system_version_major();
     let mi = cf::system_version_minor();
 
     if ma == 10 && mi < 5 {
         (
             false,
-            "This version of OSX does not support the FSEvent library, cannot proceed".to_string(),
+            "This version of OSX does not support the FSEvent library, cannot proceed",
         )
     } else {
-        (true, "ok".to_string())
+        (true, "ok")
     }
 }
 
