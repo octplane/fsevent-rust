@@ -213,13 +213,13 @@ pub unsafe fn str_path_to_cfstring_ref(source: &str, err: &mut CFErrorRef) -> CF
     }
 
     url = CFURLCreateFileReferenceURL(kCFAllocatorDefault, placeholder, err);
-    if *err != ptr::null_mut() {
+    if !err.is_null() {
         return ptr::null_mut();
     }
 
     CFRelease(placeholder);
     placeholder = CFURLCreateFilePathURL(kCFAllocatorDefault, url, err);
-    if *err != ptr::null_mut() {
+    if !err.is_null() {
         return ptr::null_mut();
     }
 
