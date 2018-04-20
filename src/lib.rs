@@ -18,8 +18,6 @@ use std::str::from_utf8;
 
 use std::sync::mpsc::Sender;
 
-pub const NULL: cf::CFRef = cf::NULL;
-
 pub struct FsEvent {
     paths: cf::CFMutableArrayRef,
     since_when: fs::FSEventStreamEventId,
