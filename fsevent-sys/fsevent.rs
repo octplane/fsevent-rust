@@ -1,17 +1,16 @@
 #![allow(non_upper_case_globals, non_camel_case_types)]
-extern crate libc;
 
 use core_foundation as cf;
 
-pub type FSEventStreamRef = *mut libc::c_void;
+pub type FSEventStreamRef = *mut ::std::os::raw::c_void;
 
 pub type FSEventStreamCallback = extern "C" fn(
   FSEventStreamRef,  //ConstFSEventStreamRef streamRef
-  *mut libc::c_void, // void *clientCallBackInfo
-  libc::size_t,      // size_t numEvents
-  *mut libc::c_void, // void *eventPaths
-  *mut libc::c_void, // const FSEventStreamEventFlags eventFlags[]
-  *mut libc::c_void, // const FSEventStreamEventId eventIds[]
+  *mut ::std::os::raw::c_void, // void *clientCallBackInfo
+  usize,                       // size_t numEvents
+  *mut ::std::os::raw::c_void, // void *eventPaths
+  *mut ::std::os::raw::c_void, // const FSEventStreamEventFlags eventFlags[]
+  *mut ::std::os::raw::c_void, // const FSEventStreamEventId eventIds[]
 );
 
 pub type FSEventStreamEventId = u64;
@@ -30,9 +29,9 @@ pub const kFSEventStreamCreateFlagFileEvents: FSEventStreamCreateFlags   = 0x000
 #[repr(C)]
 pub struct FSEventStreamContext {
   pub version: cf::CFIndex,
-  pub info: *mut libc::c_void,
-  pub retain: *mut libc::c_void,
-  pub copy_description: *mut libc::c_void,
+  pub info: *mut ::std::os::raw::c_void,
+  pub retain: *mut ::std::os::raw::c_void,
+  pub copy_description: *mut ::std::os::raw::c_void,
 }
 // impl Clone for FSEventStreamContext { }
 // impl Copy for FSEventStreamContext { }

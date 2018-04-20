@@ -6,22 +6,22 @@ use std::ffi::CString;
 use std::str;
 use std::ptr;
 
-pub type UInt32 = libc::c_uint;
-pub type SInt16 = libc::c_short;
-pub type SInt32 = libc::c_int;
+pub type UInt32 = ::std::os::raw::c_uint;
+pub type SInt16 = ::std::os::raw::c_short;
+pub type SInt32 = ::std::os::raw::c_int;
 
 pub type FourCharCode = UInt32;
 pub type OSType = FourCharCode;
 pub type OSErr = SInt16;
 
-pub const gestaltSystemVersion: libc::c_uint = 1937339254;
-pub const gestaltSystemVersionMajor: libc::c_uint = 1937339185;
-pub const gestaltSystemVersionMinor: libc::c_uint = 1937339186;
-pub const gestaltSystemVersionBugFix: libc::c_uint = 1937339187;
+pub const gestaltSystemVersion: ::std::os::raw::c_uint = 1937339254;
+pub const gestaltSystemVersionMajor: ::std::os::raw::c_uint = 1937339185;
+pub const gestaltSystemVersionMinor: ::std::os::raw::c_uint = 1937339186;
+pub const gestaltSystemVersionBugFix: ::std::os::raw::c_uint = 1937339187;
 
-pub type CFRef = *mut libc::c_void;
+pub type CFRef = *mut ::std::os::raw::c_void;
 
-pub type CFIndex = libc::c_long;
+pub type CFIndex = ::std::os::raw::c_long;
 pub type CFTimeInterval = f64;
 
 #[doc(hidden)]
@@ -36,7 +36,7 @@ pub type CFRunLoopRef = CFRef;
 pub const NULL: CFRef = 0 as CFRef;
 pub const NULL_REF_PTR: *mut CFRef = 0 as *mut CFRef;
 
-pub type CFURLPathStyle = libc::c_uint;
+pub type CFURLPathStyle = ::std::os::raw::c_uint;
 
 pub const kCFAllocatorDefault: CFRef = NULL;
 pub const kCFURLPOSIXPathStyle: CFURLPathStyle = 0;
@@ -93,7 +93,7 @@ extern "C" {
 
     pub fn CFURLCreateFileReferenceURL(allocator: CFRef, url: CFURLRef, err: *mut CFErrorRef) -> CFURLRef;
     pub fn CFURLCreateFilePathURL(allocator: CFRef, url: CFURLRef, err: *mut CFErrorRef) ->CFURLRef;
-    pub fn CFURLCreateFromFileSystemRepresentation(allocator: CFRef, path: *const libc::c_char, len: CFIndex, is_directory: bool) -> CFURLRef;
+    pub fn CFURLCreateFromFileSystemRepresentation(allocator: CFRef, path: *const ::std::os::raw::c_char, len: CFIndex, is_directory: bool) -> CFURLRef;
     pub fn CFURLCopyAbsoluteURL(res: CFURLRef) -> CFURLRef;
     pub fn CFURLCopyLastPathComponent(res: CFURLRef) -> CFStringRef;
     pub fn CFURLCreateCopyDeletingLastPathComponent(allocator: CFRef, url: CFURLRef) -> CFURLRef;
@@ -103,9 +103,9 @@ extern "C" {
     pub fn CFURLResourceIsReachable(res: CFURLRef, err: *mut CFErrorRef) -> bool;
 
     pub fn CFShowStr (str: CFStringRef);
-    pub fn CFStringGetCString(theString: CFStringRef, buffer: *mut libc::c_char, buffer_size: CFIndex, encoding: CFStringEncoding) -> bool;
-    pub fn CFStringGetCStringPtr(theString: CFStringRef, encoding: CFStringEncoding) -> *const libc::c_char;
-    pub fn CFStringCreateWithCString (alloc: CFRef, source: *const libc::c_char, encoding: kCFStringEncoding) -> CFStringRef;
+    pub fn CFStringGetCString(theString: CFStringRef, buffer: *mut ::std::os::raw::c_char, buffer_size: CFIndex, encoding: CFStringEncoding) -> bool;
+    pub fn CFStringGetCStringPtr(theString: CFStringRef, encoding: CFStringEncoding) -> *const ::std::os::raw::c_char;
+    pub fn CFStringCreateWithCString (alloc: CFRef, source: *const ::std::os::raw::c_char, encoding: kCFStringEncoding) -> CFStringRef;
 
     pub fn CFStringCompare(theString1: CFStringRef, theString2: CFStringRef, compareOptions: CFStringCompareFlags) -> CFComparisonResult;
     pub fn CFArrayRemoveValueAtIndex(theArray: CFMutableArrayRef, idx: CFIndex);
