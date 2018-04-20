@@ -197,7 +197,7 @@ impl FsEvent {
         since_when: fs::kFSEventStreamEventIdSinceNow,
         latency: 0.0,
         flags: fs::kFSEventStreamCreateFlagFileEvents | fs::kFSEventStreamCreateFlagNoDefer,
-        sender: sender,
+        sender,
       };
     }
     fsevent
@@ -277,7 +277,7 @@ pub unsafe fn callback(
     .expect(format!("Unable to decode StreamFlags: {} for {}", flags[p] as u32, path).as_ref());
     // println!("{}: {}", ids[p], flag);
 
-    let event = Event{event_id: ids[p], flag: flag, path: path.to_string()};
+    let event = Event{event_id: ids[p], flag, path: path.to_string()};
     let _s = (*fs_event).sender.send(event);
   }
 }
