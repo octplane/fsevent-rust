@@ -150,23 +150,22 @@ pub fn is_api_available() -> (bool, String) {
   let mi = cf::system_version_minor();
 
   if ma == 10 && mi < 5 {
-    return (false, "This version of OSX does not support the FSEvent library, cannot proceed".to_string());
+    (false, "This version of OSX does not support the FSEvent library, cannot proceed".to_string())
+  } else {
+    (true, "ok".to_string())
   }
-  return (true, "ok".to_string());
 }
 
 
 
 fn default_stream_context(info: *const FsEvent) -> fs::FSEventStreamContext {
   let ptr = info as *mut libc::c_void;
-  let stream_context = fs::FSEventStreamContext{
+  fs::FSEventStreamContext {
     version: 0,
     info: ptr,
     retain: cf::NULL,
     copy_description: cf::NULL
-  };
-
-  stream_context
+  }
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -215,11 +214,12 @@ impl FsEvent {
           let cf_str = cf::CFCopyDescription(err as cf::CFRef);
           let mut buf = [0; 1024];
           cf::CFStringGetCString(cf_str, buf.as_mut_ptr(), buf.len() as cf::CFIndex, cf::kCFStringEncodingUTF8);
-          return Err(Error { msg: CStr::from_ptr(buf.as_ptr()).to_str().unwrap_or("Unknown error").to_string() });
+          Err(Error { msg: CStr::from_ptr(buf.as_ptr()).to_str().unwrap_or("Unknown error").to_string() })
+      } else {
+          cf::CFArrayAppendValue(self.paths, cf_path);
+          cf::CFRelease(cf_path);
+          Ok(())
       }
-      cf::CFArrayAppendValue(self.paths, cf_path);
-      cf::CFRelease(cf_path);
-      Ok(())
     }
   }
   pub fn observe(&self) {
