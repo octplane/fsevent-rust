@@ -156,7 +156,7 @@ pub fn system_version_major() -> SInt32 {
                 err
             );
         }
-        return ret;
+        ret
     }
 }
 
@@ -170,7 +170,7 @@ pub fn system_version_minor() -> SInt32 {
                 err
             );
         }
-        return ret;
+        ret
     }
 }
 
@@ -184,7 +184,7 @@ pub fn system_version_bugfix() -> SInt32 {
                 err
             );
         }
-        return ret;
+        ret
     }
 }
 
