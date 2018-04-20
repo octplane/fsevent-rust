@@ -210,7 +210,7 @@ impl FsEvent {
     unsafe {
       let mut err = ptr::null_mut();
       let cf_path = cf::str_path_to_cfstring_ref(source, &mut err);
-      if err != ptr::null_mut() {
+      if !err.is_null() {
           let cf_str = cf::CFCopyDescription(err as cf::CFRef);
           let mut buf = [0; 1024];
           cf::CFStringGetCString(cf_str, buf.as_mut_ptr(), buf.len() as cf::CFIndex, cf::kCFStringEncodingUTF8);
