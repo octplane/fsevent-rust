@@ -1,3 +1,5 @@
+#![cfg_attr(feature = "cargo-clippy", allow(unreadable_literal))]
+
 #[macro_use] extern crate bitflags;
 
 extern crate fsevent_sys as fsevent;
