@@ -4,10 +4,9 @@
 extern crate bitflags;
 
 extern crate fsevent_sys as fsevent;
-extern crate libc;
 
 use fsevent::core_foundation as cf;
-use fsevent::fsevent as fs;
+use fsevent as fs;
 
 use std::convert::AsRef;
 use std::ffi::CStr;
@@ -140,22 +139,8 @@ impl std::fmt::Display for StreamFlags {
     }
 }
 
-pub fn is_api_available() -> (bool, &'static str) {
-    let ma = cf::system_version_major();
-    let mi = cf::system_version_minor();
-
-    if ma == 10 && mi < 5 {
-        (
-            false,
-            "This version of OSX does not support the FSEvent library, cannot proceed",
-        )
-    } else {
-        (true, "ok")
-    }
-}
-
 fn default_stream_context(info: *const FsEvent) -> fs::FSEventStreamContext {
-    let ptr = info as *mut libc::c_void;
+    let ptr = info as *mut ::std::os::raw::c_void;
     fs::FSEventStreamContext {
         version: 0,
         info: ptr,
@@ -266,18 +251,18 @@ impl FsEvent {
 #[allow(unused_variables)]
 unsafe fn callback(
     stream_ref: fs::FSEventStreamRef,
-    info: *mut libc::c_void,
-    num_events: libc::size_t,                // size_t numEvents
-    event_paths: *const *const libc::c_char, // void *eventPaths
-    event_flags: *mut libc::c_void,          // const FSEventStreamEventFlags eventFlags[]
-    event_ids: *mut libc::c_void,            // const FSEventStreamEventId eventIds[]
+    info: *mut ::std::os::raw::c_void,
+    num_events: usize,                                 // size_t numEvents
+    event_paths: *const *const ::std::os::raw::c_char, // void *eventPaths
+    event_flags: *mut ::std::os::raw::c_void,          // const FSEventStreamEventFlags eventFlags[]
+    event_ids: *mut ::std::os::raw::c_void,            // const FSEventStreamEventId eventIds[]
 ) {
     let num = num_events as usize;
     let e_ptr = event_flags as *mut u32;
     let i_ptr = event_ids as *mut u64;
     let fs_event = info as *mut FsEvent;
 
-    let paths: &[*const libc::c_char] =
+    let paths: &[*const ::std::os::raw::c_char] =
         std::mem::transmute(slice::from_raw_parts(event_paths, num));
     let flags = from_raw_parts_mut(e_ptr, num);
     let ids = from_raw_parts_mut(i_ptr, num);
