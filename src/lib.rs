@@ -1,3 +1,4 @@
+#![deny(trivial_numeric_casts, unstable_features, unused_import_braces, unused_qualifications)]
 #![cfg_attr(feature = "cargo-clippy", allow(unreadable_literal))]
 
 #[macro_use]
