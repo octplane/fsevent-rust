@@ -1,3 +1,4 @@
+#![deny(trivial_numeric_casts, unstable_features, unused_import_braces, unused_qualifications)]
 #![cfg_attr(feature = "cargo-clippy", allow(unreadable_literal))]
 
 #[macro_use]
@@ -257,7 +258,7 @@ unsafe fn callback(
     event_flags: *mut ::std::os::raw::c_void,          // const FSEventStreamEventFlags eventFlags[]
     event_ids: *mut ::std::os::raw::c_void,            // const FSEventStreamEventId eventIds[]
 ) {
-    let num = num_events as usize;
+    let num = num_events;
     let e_ptr = event_flags as *mut u32;
     let i_ptr = event_ids as *mut u64;
     let fs_event = info as *mut FsEvent;
@@ -270,12 +271,8 @@ unsafe fn callback(
     for p in 0..num {
         let i = CStr::from_ptr(paths[p]).to_bytes();
         let path = from_utf8(i).expect("Invalid UTF8 string.");
-        let flag: StreamFlags = StreamFlags::from_bits(flags[p] as u32).expect(
-            format!(
-                "Unable to decode StreamFlags: {} for {}",
-                flags[p] as u32, path
-            ).as_ref(),
-        );
+        let flag: StreamFlags = StreamFlags::from_bits(flags[p])
+            .expect(format!("Unable to decode StreamFlags: {} for {}", flags[p], path).as_ref());
         // println!("{}: {}", ids[p], flag);
 
         let event = Event {
