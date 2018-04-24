@@ -25,6 +25,35 @@ pub const kFSEventStreamCreateFlagNoDefer: FSEventStreamCreateFlags = 0x00000002
 pub const kFSEventStreamCreateFlagWatchRoot: FSEventStreamCreateFlags = 0x00000004;
 pub const kFSEventStreamCreateFlagIgnoreSelf: FSEventStreamCreateFlags = 0x00000008;
 pub const kFSEventStreamCreateFlagFileEvents: FSEventStreamCreateFlags = 0x00000010;
+pub const kFSEventStreamCreateFlagMarkSelf: FSEventStreamCreateFlags = 0x00000020;
+pub const kFSEventStreamCreateFlagUseExtendedData: FSEventStreamCreateFlags = 0x00000040;
+
+pub type FSEventStreamEventFlags = u32;
+
+pub const kFSEventStreamEventFlagNone: FSEventStreamEventFlags = 0x00000000;
+pub const kFSEventStreamEventFlagMustScanSubDirs: FSEventStreamEventFlags = 0x00000001;
+pub const kFSEventStreamEventFlagUserDropped: FSEventStreamEventFlags = 0x00000002;
+pub const kFSEventStreamEventFlagKernelDropped: FSEventStreamEventFlags = 0x00000004;
+pub const kFSEventStreamEventFlagEventIdsWrapped: FSEventStreamEventFlags = 0x00000008;
+pub const kFSEventStreamEventFlagHistoryDone: FSEventStreamEventFlags = 0x00000010;
+pub const kFSEventStreamEventFlagRootChanged: FSEventStreamEventFlags = 0x00000020;
+pub const kFSEventStreamEventFlagMount: FSEventStreamEventFlags = 0x00000040;
+pub const kFSEventStreamEventFlagUnmount: FSEventStreamEventFlags = 0x00000080;
+pub const kFSEventStreamEventFlagItemCreated: FSEventStreamEventFlags = 0x00000100;
+pub const kFSEventStreamEventFlagItemRemoved: FSEventStreamEventFlags = 0x00000200;
+pub const kFSEventStreamEventFlagItemInodeMetaMod: FSEventStreamEventFlags = 0x00000400;
+pub const kFSEventStreamEventFlagItemRenamed: FSEventStreamEventFlags = 0x00000800;
+pub const kFSEventStreamEventFlagItemModified: FSEventStreamEventFlags = 0x00001000;
+pub const kFSEventStreamEventFlagItemFinderInfoMod: FSEventStreamEventFlags = 0x00002000;
+pub const kFSEventStreamEventFlagItemChangeOwner: FSEventStreamEventFlags = 0x00004000;
+pub const kFSEventStreamEventFlagItemXattrMod: FSEventStreamEventFlags = 0x00008000;
+pub const kFSEventStreamEventFlagItemIsFile: FSEventStreamEventFlags = 0x00010000;
+pub const kFSEventStreamEventFlagItemIsDir: FSEventStreamEventFlags = 0x00020000;
+pub const kFSEventStreamEventFlagItemIsSymlink: FSEventStreamEventFlags = 0x00040000;
+pub const kFSEventStreamEventFlagOwnEvent: FSEventStreamEventFlags = 0x00080000;
+pub const kFSEventStreamEventFlagItemIsHardlink: FSEventStreamEventFlags = 0x00100000;
+pub const kFSEventStreamEventFlagItemIsLastHardlink: FSEventStreamEventFlags = 0x00200000;
+pub const kFSEventStreamEventFlagItemCloned: FSEventStreamEventFlags = 0x00400000;
 
 #[repr(C)]
 pub struct FSEventStreamContext {
