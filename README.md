@@ -8,7 +8,7 @@ Original Author:
 In `cargo.toml`
 
 ```
-fsevent = "*""
+fsevent = "*"
 ```
 
 # Usage
