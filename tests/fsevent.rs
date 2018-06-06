@@ -75,7 +75,16 @@ fn resolve_path(path: &str) -> PathBuf {
 }
 
 #[test]
-fn observe_folder() {
+fn observe_folder_sync() {
+    internal_observe_folder(false);
+}
+
+#[test]
+fn observe_folder_async() {
+    internal_observe_folder(true);
+}
+
+fn internal_observe_folder(run_async: bool) {
     let dir = TempDir::new("dur").unwrap();
     // Resolve path so we don't have to worry about affect of symlinks on the test.
     let dst = resolve_path(dir.path().to_str().unwrap());
@@ -100,7 +109,19 @@ fn observe_folder() {
 
     let (sender, receiver) = channel();
 
-    {
+    let mut async_fsevent = fsevent::FsEvent::new(vec![]);
+    let fsevent_ref_wrapper = if run_async {
+        async_fsevent
+            .append_path(dst1.as_path().to_str().unwrap())
+            .unwrap();
+        async_fsevent
+            .append_path(dst2.as_path().to_str().unwrap())
+            .unwrap();
+        async_fsevent
+            .append_path(dst3.as_path().to_str().unwrap())
+            .unwrap();
+        Some(async_fsevent.observe_async(sender).unwrap())
+    } else {
         let _t = thread::spawn(move || {
             let mut fsevent = fsevent::FsEvent::new(vec![]);
             fsevent
@@ -114,7 +135,8 @@ fn observe_folder() {
                 .unwrap();
             fsevent.observe(sender);
         });
-    }
+        None
+    };
 
     validate_recv(
         receiver,
@@ -133,10 +155,24 @@ fn observe_folder() {
             ),
         ],
     );
+
+    match fsevent_ref_wrapper {
+        Some(r) => async_fsevent.shutdown_observe(r),
+        None => {}
+    }
 }
 
 #[test]
-fn validate_watch_single_file() {
+fn validate_watch_single_file_sync() {
+    internal_validate_watch_single_file(false);
+}
+
+#[test]
+fn validate_watch_single_file_async() {
+    internal_validate_watch_single_file(true);
+}
+
+fn internal_validate_watch_single_file(run_async: bool) {
     let dir = TempDir::new("dir").unwrap();
     // Resolve path so we don't have to worry about affect of symlinks on the test.
     let mut dst = resolve_path(dir.path().to_str().unwrap());
@@ -152,7 +188,14 @@ fn validate_watch_single_file() {
     file.flush().unwrap();
     drop(file);
 
-    {
+    let mut async_fsevent = fsevent::FsEvent::new(vec![]);
+    let _fsevent_ref_wrapper = if run_async {
+        let dst = dst.clone();
+        async_fsevent
+            .append_path(dst.as_path().to_str().unwrap())
+            .unwrap();
+        Some(async_fsevent.observe_async(sender).unwrap())
+    } else {
         let dst = dst.clone();
         let _t = thread::spawn(move || {
             let mut fsevent = fsevent::FsEvent::new(vec![]);
@@ -161,7 +204,8 @@ fn validate_watch_single_file() {
                 .unwrap();
             fsevent.observe(sender);
         });
-    }
+        None
+    };
 
     {
         let dst = dst.clone();
@@ -187,4 +231,9 @@ fn validate_watch_single_file() {
             ),
         ],
     );
+
+    match _fsevent_ref_wrapper {
+        Some(r) => async_fsevent.shutdown_observe(r),
+        None => {}
+    }
 }
