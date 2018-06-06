@@ -169,17 +169,27 @@ impl std::fmt::Display for Error {
     }
 }
 
+impl From<std::sync::mpsc::RecvTimeoutError> for Error {
+    fn from(err: std::sync::mpsc::RecvTimeoutError) -> Error {
+        use std::error::Error;
+
+        Self {
+            msg: err.description().to_string(),
+        }
+    }
+}
+
 impl FsEvent {
     pub fn new(sender: Sender<Event>) -> FsEvent {
         let fsevent: FsEvent;
 
         unsafe {
             fsevent = FsEvent {
-                paths: cf::CFArrayCreateMutable(
+                paths: FsEventHandle::from(cf::CFArrayCreateMutable(
                     cf::kCFAllocatorDefault,
                     0,
                     &cf::kCFTypeArrayCallBacks,
-                ),
+                )),
                 since_when: fs::kFSEventStreamEventIdSinceNow,
                 latency: 0.0,
                 flags: fs::kFSEventStreamCreateFlagFileEvents | fs::kFSEventStreamCreateFlagNoDefer,
@@ -245,6 +255,51 @@ impl FsEvent {
 
             fs::FSEventStreamFlushSync(stream);
             fs::FSEventStreamStop(stream);
+        }
+    }
+
+    pub fn observe_async(&self) -> Result<FsEventHandle> {
+        let (ret_tx, ret_rx) = std::sync::mpsc::channel();
+
+        std::thread::spawn(move || {
+            let stream_context = default_stream_context(self);
+
+            let cb = callback as *mut _;
+
+            unsafe {
+                let stream = fs::FSEventStreamCreate(
+                    cf::kCFAllocatorDefault,
+                    cb,
+                    &stream_context,
+                    self.paths.into(),
+                    self.since_when,
+                    self.latency,
+                    self.flags,
+                );
+
+                // fs::FSEventStreamShow(stream);
+
+                let runloop_ref = cf::CFRunLoopGetCurrent();
+                let runloop_ref_safe = FsEventHandle::from(runloop_ref);
+                ret_tx.send(runloop_ref_safe).expect(&format!("Unable to return CFRunLoopRef ({:#X})", runloop_ref_safe.ptr));
+
+                fs::FSEventStreamScheduleWithRunLoop(
+                    stream,
+                    cf::CFRunLoopGetCurrent(),
+                    cf::kCFRunLoopDefaultMode,
+                );
+
+                fs::FSEventStreamStart(stream);
+                cf::CFRunLoopRun();
+
+                fs::FSEventStreamFlushSync(stream);
+                fs::FSEventStreamStop(stream);
+            }
+        });
+
+        match ret_rx.recv_timeout(std::time::Duration::from_secs(5)) {
+            Ok(v) => Ok(v),
+            Err(e) => Err(Error::from(e))
         }
     }
 }
