@@ -25,6 +25,7 @@ type SafePointer = u64;
 #[cfg(target_pointer_width = "32")]
 type SafePointer = u32;
 
+#[derive(Clone, Copy, Debug)]
 pub struct FsEventRefWrapper {
     ptr: SafePointer,
 }
