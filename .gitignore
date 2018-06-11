@@ -12,3 +12,6 @@
 /target/
 
 Cargo.lock
+
+# IntelliJ Files
+.idea/

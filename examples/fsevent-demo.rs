@@ -6,9 +6,8 @@ fn main() {
     let (sender, receiver) = channel();
 
     let _t = thread::spawn(move || {
-        let fsevent = fsevent::FsEvent::new(sender);
-        fsevent.append_path(".").unwrap();
-        fsevent.observe();
+        let fsevent = fsevent::FsEvent::new(vec![".".to_string()]);
+        fsevent.observe(sender);
     });
 
     loop {
