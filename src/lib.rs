@@ -72,7 +72,7 @@ bitflags! {
     const UNMOUNT = 0x00000080;
     const ITEM_CREATED = 0x00000100;
     const ITEM_REMOVED = 0x00000200;
-    const INOTE_META_MOD = 0x00000400;
+    const INODE_META_MOD = 0x00000400;
     const ITEM_RENAMED = 0x00000800;
     const ITEM_MODIFIED = 0x00001000;
     const FINDER_INFO_MOD = 0x00002000;
@@ -80,7 +80,7 @@ bitflags! {
     const ITEM_XATTR_MOD = 0x00008000;
     const IS_FILE = 0x00010000;
     const IS_DIR = 0x00020000;
-    const IS_SYMLIMK = 0x00040000;
+    const IS_SYMLINK = 0x00040000;
     const OWN_EVENT = 0x00080000;
     const IS_HARDLINK = 0x00100000;
     const IS_LAST_HARDLINK = 0x00200000;
@@ -120,8 +120,8 @@ impl std::fmt::Display for StreamFlags {
         if self.contains(StreamFlags::ITEM_REMOVED) {
             let _d = write!(f, "ITEM_REMOVED ");
         }
-        if self.contains(StreamFlags::INOTE_META_MOD) {
-            let _d = write!(f, "INOTE_META_MOD ");
+        if self.contains(StreamFlags::INODE_META_MOD) {
+            let _d = write!(f, "INODE_META_MOD ");
         }
         if self.contains(StreamFlags::ITEM_RENAMED) {
             let _d = write!(f, "ITEM_RENAMED ");
@@ -144,8 +144,8 @@ impl std::fmt::Display for StreamFlags {
         if self.contains(StreamFlags::IS_DIR) {
             let _d = write!(f, "IS_DIR ");
         }
-        if self.contains(StreamFlags::IS_SYMLIMK) {
-            let _d = write!(f, "IS_SYMLIMK ");
+        if self.contains(StreamFlags::IS_SYMLINK) {
+            let _d = write!(f, "IS_SYMLINK ");
         }
         if self.contains(StreamFlags::OWN_EVENT) {
             let _d = write!(f, "OWN_EVENT ");
