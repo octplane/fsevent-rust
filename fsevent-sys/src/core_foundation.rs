@@ -6,6 +6,8 @@ use std::ffi::CString;
 use std::ptr;
 use std::str;
 
+pub type Boolean = std::os::raw::c_uchar;
+
 pub type CFRef = *mut ::std::os::raw::c_void;
 
 pub type CFIndex = ::std::os::raw::c_long;
@@ -14,6 +16,7 @@ pub type CFTimeInterval = f64;
 #[doc(hidden)]
 pub enum CFError {}
 
+pub type CFAllocatorRef = CFRef;
 pub type CFMutableArrayRef = CFRef;
 pub type CFURLRef = CFRef;
 pub type CFErrorRef = *mut CFError;
@@ -23,34 +26,43 @@ pub type CFRunLoopRef = CFRef;
 pub const NULL: CFRef = 0 as CFRef;
 pub const NULL_REF_PTR: *mut CFRef = 0 as *mut CFRef;
 
-pub type CFURLPathStyle = ::std::os::raw::c_uint;
+pub type CFAllocatorRetainCallBack =
+    extern "C" fn(*const std::os::raw::c_void) -> *const std::os::raw::c_void;
+pub type CFAllocatorReleaseCallBack = extern "C" fn(*const std::os::raw::c_void);
+pub type CFAllocatorCopyDescriptionCallBack =
+    extern "C" fn(*const std::os::raw::c_void) -> *const CFStringRef;
 
-pub const kCFAllocatorDefault: CFRef = NULL;
+pub type CFURLPathStyle = CFIndex;
+
+pub const kCFAllocatorDefault: CFAllocatorRef = NULL;
 pub const kCFURLPOSIXPathStyle: CFURLPathStyle = 0;
 pub const kCFURLHFSPathStyle: CFURLPathStyle = 1;
 pub const kCFURLWindowsPathStyle: CFURLPathStyle = 2;
 
-pub const kCFStringEncodingUTF8: u32 = 0x08000100;
+pub const kCFStringEncodingUTF8: CFStringEncoding = 0x08000100;
 pub type CFStringEncoding = u32;
 
-pub const kCFCompareEqualTo: i32 = 0;
-pub type CFComparisonResult = i32;
+pub const kCFCompareEqualTo: CFIndex = 0;
+pub type CFComparisonResult = CFIndex;
 
 // MacOS uses Case Insensitive path
-pub const kCFCompareCaseInsensitive: u32 = 1;
-pub type CFStringCompareFlags = u32;
+pub const kCFCompareCaseInsensitive: CFStringCompareFlags = 1;
+pub type CFStringCompareFlags = std::os::raw::c_ulong;
 
-// CFStringEncoding
-pub type kCFStringEncoding = u32;
-pub const UTF8: kCFStringEncoding = 0x08000100;
+pub type CFArrayRetainCallBack =
+    extern "C" fn(CFAllocatorRef, *const std::os::raw::c_void) -> *const std::os::raw::c_void;
+pub type CFArrayReleaseCallBack = extern "C" fn(CFAllocatorRef, *const std::os::raw::c_void);
+pub type CFArrayCopyDescriptionCallBack = extern "C" fn(*const std::os::raw::c_void) -> CFStringRef;
+pub type CFArrayEqualCallBack =
+    extern "C" fn(*const std::os::raw::c_void, *const std::os::raw::c_void) -> Boolean;
 
 #[repr(C)]
 pub struct CFArrayCallBacks {
     version: CFIndex,
-    retain: CFRef,
-    release: CFRef,
-    cp: CFRef,
-    equal: CFRef,
+    retain: Option<CFArrayRetainCallBack>,
+    release: Option<CFArrayReleaseCallBack>,
+    cp: Option<CFArrayCopyDescriptionCallBack>,
+    equal: Option<CFArrayEqualCallBack>,
 }
 //impl Clone for CFArrayCallBacks { }
 
@@ -120,7 +132,7 @@ extern "C" {
     pub fn CFStringCreateWithCString(
         alloc: CFRef,
         source: *const ::std::os::raw::c_char,
-        encoding: kCFStringEncoding,
+        encoding: CFStringEncoding,
     ) -> CFStringRef;
 
     pub fn CFStringCompare(
