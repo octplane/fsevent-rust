@@ -6,7 +6,7 @@ use std::ffi::CString;
 use std::ptr;
 use std::str;
 
-pub type Boolean = std::os::raw::c_uchar;
+pub type Boolean = ::std::os::raw::c_uchar;
 
 pub type CFRef = *mut ::std::os::raw::c_void;
 
@@ -27,10 +27,10 @@ pub const NULL: CFRef = 0 as CFRef;
 pub const NULL_REF_PTR: *mut CFRef = 0 as *mut CFRef;
 
 pub type CFAllocatorRetainCallBack =
-    extern "C" fn(*const std::os::raw::c_void) -> *const std::os::raw::c_void;
-pub type CFAllocatorReleaseCallBack = extern "C" fn(*const std::os::raw::c_void);
+    extern "C" fn(*const ::std::os::raw::c_void) -> *const ::std::os::raw::c_void;
+pub type CFAllocatorReleaseCallBack = extern "C" fn(*const ::std::os::raw::c_void);
 pub type CFAllocatorCopyDescriptionCallBack =
-    extern "C" fn(*const std::os::raw::c_void) -> *const CFStringRef;
+    extern "C" fn(*const ::std::os::raw::c_void) -> *const CFStringRef;
 
 pub type CFURLPathStyle = CFIndex;
 
@@ -47,14 +47,14 @@ pub type CFComparisonResult = CFIndex;
 
 // MacOS uses Case Insensitive path
 pub const kCFCompareCaseInsensitive: CFStringCompareFlags = 1;
-pub type CFStringCompareFlags = std::os::raw::c_ulong;
+pub type CFStringCompareFlags = ::std::os::raw::c_ulong;
 
 pub type CFArrayRetainCallBack =
-    extern "C" fn(CFAllocatorRef, *const std::os::raw::c_void) -> *const std::os::raw::c_void;
-pub type CFArrayReleaseCallBack = extern "C" fn(CFAllocatorRef, *const std::os::raw::c_void);
-pub type CFArrayCopyDescriptionCallBack = extern "C" fn(*const std::os::raw::c_void) -> CFStringRef;
+    extern "C" fn(CFAllocatorRef, *const ::std::os::raw::c_void) -> *const ::std::os::raw::c_void;
+pub type CFArrayReleaseCallBack = extern "C" fn(CFAllocatorRef, *const ::std::os::raw::c_void);
+pub type CFArrayCopyDescriptionCallBack = extern "C" fn(*const ::std::os::raw::c_void) -> CFStringRef;
 pub type CFArrayEqualCallBack =
-    extern "C" fn(*const std::os::raw::c_void, *const std::os::raw::c_void) -> Boolean;
+    extern "C" fn(*const ::std::os::raw::c_void, *const ::std::os::raw::c_void) -> Boolean;
 
 #[repr(C)]
 pub struct CFArrayCallBacks {

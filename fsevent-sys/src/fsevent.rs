@@ -17,7 +17,7 @@ pub type FSEventStreamEventId = u64;
 
 pub const kFSEventStreamEventIdSinceNow: FSEventStreamEventId = 0xFFFFFFFFFFFFFFFF;
 
-pub type FSEventStreamCreateFlags = std::os::raw::c_uint;
+pub type FSEventStreamCreateFlags = ::std::os::raw::c_uint;
 
 pub const kFSEventStreamCreateFlagNone: FSEventStreamCreateFlags = 0x00000000;
 pub const kFSEventStreamCreateFlagUseCFTypes: FSEventStreamCreateFlags = 0x00000001;
@@ -28,7 +28,7 @@ pub const kFSEventStreamCreateFlagFileEvents: FSEventStreamCreateFlags = 0x00000
 pub const kFSEventStreamCreateFlagMarkSelf: FSEventStreamCreateFlags = 0x00000020;
 pub const kFSEventStreamCreateFlagUseExtendedData: FSEventStreamCreateFlags = 0x00000040;
 
-pub type FSEventStreamEventFlags = std::os::raw::c_uint;
+pub type FSEventStreamEventFlags = ::std::os::raw::c_uint;
 
 pub const kFSEventStreamEventFlagNone: FSEventStreamEventFlags = 0x00000000;
 pub const kFSEventStreamEventFlagMustScanSubDirs: FSEventStreamEventFlags = 0x00000001;
