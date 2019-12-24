@@ -1,5 +1,5 @@
 extern crate fsevent;
-extern crate tempdir;
+extern crate tempfile;
 extern crate time;
 
 use fsevent::*;
@@ -12,7 +12,6 @@ use std::thread;
 use std::time::Duration;
 
 use std::sync::mpsc::{channel, Receiver};
-use tempdir::TempDir;
 
 const TIMEOUT_S: f64 = 5.0;
 
@@ -85,7 +84,7 @@ fn observe_folder_async() {
 }
 
 fn internal_observe_folder(run_async: bool) {
-    let dir = TempDir::new("dur").unwrap();
+    let dir = tempfile::Builder::new().prefix("dur").tempdir().unwrap();
     // Resolve path so we don't have to worry about affect of symlinks on the test.
     let dst = resolve_path(dir.path().to_str().unwrap());
 
@@ -173,7 +172,7 @@ fn validate_watch_single_file_async() {
 }
 
 fn internal_validate_watch_single_file(run_async: bool) {
-    let dir = TempDir::new("dir").unwrap();
+    let dir = tempfile::Builder::new().prefix("dur").tempdir().unwrap();
     // Resolve path so we don't have to worry about affect of symlinks on the test.
     let mut dst = resolve_path(dir.path().to_str().unwrap());
     dst.push("out.txt");
