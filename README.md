@@ -25,3 +25,4 @@ cf examples/ folder.
 - Bruce Mitchener @waywardmonkeys
 - Zac Brown @zacbrown
 - mtak- @mtak-
+- Yuki Okushi @JohnTitor
