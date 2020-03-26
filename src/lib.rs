@@ -1,4 +1,9 @@
-#![deny(trivial_numeric_casts, unstable_features, unused_import_braces, unused_qualifications)]
+#![deny(
+    trivial_numeric_casts,
+    unstable_features,
+    unused_import_braces,
+    unused_qualifications
+)]
 #![cfg_attr(feature = "cargo-clippy", allow(unreadable_literal))]
 
 #[macro_use]
@@ -6,8 +11,8 @@ extern crate bitflags;
 
 extern crate fsevent_sys as fsevent;
 
-use fsevent::core_foundation as cf;
 use fsevent as fs;
+use fsevent::core_foundation as cf;
 
 use std::convert::AsRef;
 use std::ffi::CStr;
@@ -195,10 +200,8 @@ impl std::fmt::Display for Error {
 
 impl From<std::sync::mpsc::RecvTimeoutError> for Error {
     fn from(err: std::sync::mpsc::RecvTimeoutError) -> Error {
-        use std::error::Error;
-
         Self {
-            msg: err.description().to_string(),
+            msg: err.to_string(),
         }
     }
 }
@@ -312,7 +315,8 @@ impl FsEvent {
     }
 
     pub fn observe(&self, event_sender: Sender<Event>) {
-        let native_paths = self.build_native_paths()
+        let native_paths = self
+            .build_native_paths()
             .expect("Unable to build CFMutableArrayRef of watched paths.");
         let safe_native_paths = FsEventRefWrapper::from(native_paths);
         Self::internal_observe(
@@ -322,7 +326,8 @@ impl FsEvent {
             safe_native_paths,
             event_sender,
             None,
-        ).unwrap();
+        )
+        .unwrap();
     }
 
     pub fn observe_async(&self, event_sender: Sender<Event>) -> Result<FsEventRefWrapper> {
@@ -379,8 +384,9 @@ extern "C" fn callback(
         for p in 0..num {
             let i = CStr::from_ptr(paths[p]).to_bytes();
             let path = from_utf8(i).expect("Invalid UTF8 string.");
-            let flag: StreamFlags = StreamFlags::from_bits(flags[p])
-                .expect(format!("Unable to decode StreamFlags: {} for {}", flags[p], path).as_ref());
+            let flag: StreamFlags = StreamFlags::from_bits(flags[p]).expect(
+                format!("Unable to decode StreamFlags: {} for {}", flags[p], path).as_ref(),
+            );
             // println!("{}: {}", ids[p], flag);
 
             let event = Event {

@@ -4,22 +4,21 @@ extern crate time;
 
 use fsevent::*;
 use std::fs;
-use std::fs::OpenOptions;
 use std::fs::read_link;
+use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::{Component, PathBuf};
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, SystemTime};
 
 use std::sync::mpsc::{channel, Receiver};
 
-const TIMEOUT_S: f64 = 5.0;
-
 fn validate_recv(rx: Receiver<Event>, evs: Vec<(String, StreamFlags)>) {
-    let deadline = time::precise_time_s() + TIMEOUT_S;
+    let timeout: Duration = Duration::new(5, 0);
+    let deadline = SystemTime::now() + timeout;
     let mut evs = evs.clone();
 
-    while time::precise_time_s() < deadline {
+    while SystemTime::now() < deadline {
         if let Ok(actual) = rx.try_recv() {
             let mut found: Option<usize> = None;
             for i in 0..evs.len() {
@@ -223,12 +222,10 @@ fn internal_validate_watch_single_file(run_async: bool) {
 
     validate_recv(
         receiver,
-        vec![
-            (
-                dst.to_str().unwrap().to_string(),
-                StreamFlags::ITEM_MODIFIED | StreamFlags::ITEM_CREATED | StreamFlags::IS_FILE,
-            ),
-        ],
+        vec![(
+            dst.to_str().unwrap().to_string(),
+            StreamFlags::ITEM_MODIFIED | StreamFlags::ITEM_CREATED | StreamFlags::IS_FILE,
+        )],
     );
 
     match _fsevent_ref_wrapper {
