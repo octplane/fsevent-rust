@@ -1,3 +1,4 @@
+#![cfg(target_arch = "macOS")]
 extern crate fsevent;
 extern crate tempfile;
 extern crate time;

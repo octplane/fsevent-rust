@@ -3,6 +3,10 @@ extern crate fsevent;
 use std::sync::mpsc::channel;
 use std::thread;
 
+#[cfg(not(target_arch = "macOS"))]
+fn main() {}
+
+#[cfg(target_arch = "macOS")]
 fn main() {
     let (sender, receiver) = channel();
 

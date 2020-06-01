@@ -1,3 +1,4 @@
+#![cfg(target_arch = "macOS")]
 #![deny(
     trivial_numeric_casts,
     unstable_features,
