@@ -9,7 +9,7 @@ repository = "https://github.com/octplane/fsevent-rust"
 
 [dependencies]
 bitflags = "1"
-fsevent-sys = "3.0.0"
+fsevent-sys = "3.0.1"
 
 [dev-dependencies]
 tempfile = "3"
