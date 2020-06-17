@@ -8,3 +8,6 @@ repository = "https://github.com/octplane/fsevent-rust/tree/master/fsevent-sys"
 
 [dependencies]
 libc = "0.2.68"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-apple-darwin"]
