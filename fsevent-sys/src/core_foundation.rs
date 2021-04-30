@@ -141,7 +141,6 @@ extern "C" {
         compareOptions: CFStringCompareFlags,
     ) -> CFComparisonResult;
     pub fn CFArrayRemoveValueAtIndex(theArray: CFMutableArrayRef, idx: CFIndex);
-
 }
 
 pub unsafe fn str_path_to_cfstring_ref(source: &str, err: &mut CFErrorRef) -> CFStringRef {
@@ -153,12 +152,23 @@ pub unsafe fn str_path_to_cfstring_ref(source: &str, err: &mut CFErrorRef) -> CF
         c_len as CFIndex,
         false,
     );
+    if url.is_null() {
+        return ptr::null_mut();
+    }
     let mut placeholder = CFURLCopyAbsoluteURL(url);
     CFRelease(url);
 
-    let imaginary: CFRef = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
+    let mut imaginary = ptr::null_mut();
 
-    while !CFURLResourceIsReachable(placeholder, ptr::null_mut()) {
+    while !CFURLResourceIsReachable(placeholder.0, ptr::null_mut()) {
+        if imaginary.is_null() {
+            imaginary = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
+            if imaginary.is_null() {
+                CFRelease(placeholder);
+                return ptr::null_mut();
+            }
+        }
+
         let child = CFURLCopyLastPathComponent(placeholder);
         CFArrayInsertValueAtIndex(imaginary, 0, child);
         CFRelease(child);
@@ -169,19 +179,24 @@ pub unsafe fn str_path_to_cfstring_ref(source: &str, err: &mut CFErrorRef) -> CF
     }
 
     url = CFURLCreateFileReferenceURL(kCFAllocatorDefault, placeholder, err);
-    if !err.is_null() {
-        return ptr::null_mut();
-    }
-
     CFRelease(placeholder);
-    placeholder = CFURLCreateFilePathURL(kCFAllocatorDefault, url, err);
-    if !err.is_null() {
+    if url.is_null() {
+        if !imaginary.is_null() {
+            CFRelease(imaginary);
+        }
         return ptr::null_mut();
     }
 
+    placeholder = CFURLCreateFilePathURL(kCFAllocatorDefault, url, err);
     CFRelease(url);
+    if placeholder.is_null() {
+        if !imaginary.is_null() {
+            CFRelease(imaginary);
+        }
+        return ptr::null_mut();
+    }
 
-    if imaginary != kCFAllocatorDefault {
+    if !imaginary.is_null() {
         let mut count = 0;
         while count < CFArrayGetCount(imaginary) {
             let component = CFArrayGetValueAtIndex(imaginary, count);
@@ -192,6 +207,10 @@ pub unsafe fn str_path_to_cfstring_ref(source: &str, err: &mut CFErrorRef) -> CF
                 false,
             );
             CFRelease(placeholder);
+            if url.is_null() {
+                CFRelease(imaginary);
+                return ptr::null_mut();
+            }
             placeholder = url;
             count += 1;
         }
