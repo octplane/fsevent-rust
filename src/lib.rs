@@ -388,7 +388,6 @@ extern "C" fn callback(
             let flag: StreamFlags = StreamFlags::from_bits(flags[p]).expect(
                 format!("Unable to decode StreamFlags: {} for {}", flags[p], path).as_ref(),
             );
-            // println!("{}: {}", ids[p], flag);
 
             let event = Event {
                 event_id: ids[p],
