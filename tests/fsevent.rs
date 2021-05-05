@@ -49,30 +49,6 @@ fn validate_recv(rx: Receiver<Event>, evs: Vec<(String, StreamFlags)>) {
     );
 }
 
-// TODO: replace with std::fs::canonicalize rust-lang/rust#27706.
-fn resolve_path(path: &str) -> PathBuf {
-    let mut out = PathBuf::new();
-    let buf = PathBuf::from(path);
-    for p in buf.components() {
-        match p {
-            Component::RootDir => out.push("/"),
-            Component::Normal(osstr) => {
-                out.push(osstr);
-                if let Ok(real) = read_link(&out) {
-                    if real.is_relative() {
-                        out.pop();
-                        out.push(real);
-                    } else {
-                        out = real;
-                    }
-                }
-            }
-            _ => (),
-        }
-    }
-    out
-}
-
 #[test]
 fn observe_folder_sync() {
     internal_observe_folder(false);
@@ -86,7 +62,7 @@ fn observe_folder_async() {
 fn internal_observe_folder(run_async: bool) {
     let dir = tempfile::Builder::new().prefix("dur").tempdir().unwrap();
     // Resolve path so we don't have to worry about affect of symlinks on the test.
-    let dst = resolve_path(dir.path().to_str().unwrap());
+    let dst = fs::canonicalize(dir.path().to_str().unwrap());
 
     let mut dst1 = dst.clone();
     dst1.push("dest1");
@@ -174,7 +150,7 @@ fn validate_watch_single_file_async() {
 fn internal_validate_watch_single_file(run_async: bool) {
     let dir = tempfile::Builder::new().prefix("dur").tempdir().unwrap();
     // Resolve path so we don't have to worry about affect of symlinks on the test.
-    let mut dst = resolve_path(dir.path().to_str().unwrap());
+    let mut dst = fs::canonicalize(dir.path().to_str().unwrap());
     dst.push("out.txt");
     let (sender, receiver) = channel();
 
