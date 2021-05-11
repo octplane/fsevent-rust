@@ -15,7 +15,6 @@ extern crate fsevent_sys as fsevent;
 use fsevent as fs;
 use fsevent::core_foundation as cf;
 
-use std::convert::AsRef;
 use std::ffi::CStr;
 use std::ptr;
 use std::slice;
@@ -385,8 +384,8 @@ extern "C" fn callback(
         for p in 0..num {
             let i = CStr::from_ptr(paths[p]).to_bytes();
             let path = from_utf8(i).expect("Invalid UTF8 string.");
-            let flag: StreamFlags = StreamFlags::from_bits(flags[p]).expect(
-                format!("Unable to decode StreamFlags: {} for {}", flags[p], path).as_ref(),
+            let flag: StreamFlags = StreamFlags::from_bits(flags[p]).unwrap_or_else(||
+                panic!("Unable to decode StreamFlags: {} for {}", flags[p], path)
             );
             // println!("{}: {}", ids[p], flag);
 

@@ -158,9 +158,9 @@ pub unsafe fn str_path_to_cfstring_ref(source: &str, err: &mut CFErrorRef) -> CF
     let mut placeholder = CFURLCopyAbsoluteURL(url);
     CFRelease(url);
 
-    let mut imaginary = ptr::null_mut();
+    let mut imaginary: CFRef = ptr::null_mut();
 
-    while !CFURLResourceIsReachable(placeholder.0, ptr::null_mut()) {
+    while !CFURLResourceIsReachable(placeholder, ptr::null_mut()) {
         if imaginary.is_null() {
             imaginary = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
             if imaginary.is_null() {
