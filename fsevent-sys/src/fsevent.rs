@@ -6,12 +6,12 @@ use std::os::raw::{c_uint, c_void};
 pub type FSEventStreamRef = *mut c_void;
 
 pub type FSEventStreamCallback = extern "C" fn(
-    FSEventStreamRef,              // ConstFSEventStreamRef streamRef
-    *mut c_void,   // void *clientCallBackInfo
-    usize,                         // size_t numEvents
-    *mut c_void,   // void *eventPaths
+    FSEventStreamRef,               // ConstFSEventStreamRef streamRef
+    *mut c_void,                    // void *clientCallBackInfo
+    usize,                          // size_t numEvents
+    *mut c_void,                    // void *eventPaths
     *const FSEventStreamEventFlags, // const FSEventStreamEventFlags eventFlags[]
-    *const FSEventStreamEventId, // const FSEventStreamEventId eventIds[]
+    *const FSEventStreamEventId,    // const FSEventStreamEventId eventIds[]
 );
 
 pub type FSEventStreamEventId = u64;

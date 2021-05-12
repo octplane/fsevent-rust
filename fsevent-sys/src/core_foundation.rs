@@ -52,7 +52,8 @@ pub type CFStringCompareFlags = ::std::os::raw::c_ulong;
 pub type CFArrayRetainCallBack =
     extern "C" fn(CFAllocatorRef, *const ::std::os::raw::c_void) -> *const ::std::os::raw::c_void;
 pub type CFArrayReleaseCallBack = extern "C" fn(CFAllocatorRef, *const ::std::os::raw::c_void);
-pub type CFArrayCopyDescriptionCallBack = extern "C" fn(*const ::std::os::raw::c_void) -> CFStringRef;
+pub type CFArrayCopyDescriptionCallBack =
+    extern "C" fn(*const ::std::os::raw::c_void) -> CFStringRef;
 pub type CFArrayEqualCallBack =
     extern "C" fn(*const ::std::os::raw::c_void, *const ::std::os::raw::c_void) -> Boolean;
 
