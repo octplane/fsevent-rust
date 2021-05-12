@@ -1,8 +1,6 @@
 #![cfg(target_os="macos")]
-extern crate fsevent;
-extern crate tempfile;
-extern crate time;
 
+use fsevent_sys::core_foundation as cf;
 use fsevent::*;
 use std::fs;
 use std::fs::read_link;
@@ -13,6 +11,14 @@ use std::thread;
 use std::time::{Duration, SystemTime};
 
 use std::sync::mpsc::{channel, Receiver};
+
+// Helper to send the runloop from an observer thread.
+struct CFRunLoopSendWrapper(cf::CFRunLoopRef);
+
+// Safety: According to the Apple documentation, it is safe to send CFRef types across threads.
+//
+// https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/ThreadSafetySummary/ThreadSafetySummary.html
+unsafe impl Send for CFRunLoopSendWrapper {}
 
 fn validate_recv(rx: Receiver<Event>, evs: Vec<(String, StreamFlags)>) {
     let timeout: Duration = Duration::new(5, 0);
@@ -106,7 +112,7 @@ fn internal_observe_folder(run_async: bool) {
     let (sender, receiver) = channel();
 
     let mut async_fsevent = fsevent::FsEvent::new(vec![]);
-    let fsevent_ref_wrapper = if run_async {
+    let runloop_and_thread = if run_async {
         async_fsevent
             .append_path(dst1.as_path().to_str().unwrap())
             .unwrap();
@@ -116,9 +122,15 @@ fn internal_observe_folder(run_async: bool) {
         async_fsevent
             .append_path(dst3.as_path().to_str().unwrap())
             .unwrap();
-        Some(async_fsevent.observe_async(sender).unwrap())
+        async_fsevent.observe_async(sender).unwrap();
+
+        None
     } else {
-        let _t = thread::spawn(move || {
+        let (tx, rx) = std::sync::mpsc::channel();
+        let observe_thread = thread::spawn(move || {
+            let runloop = unsafe { cf::CFRunLoopGetCurrent() };
+            tx.send(CFRunLoopSendWrapper(runloop)).unwrap();
+
             let mut fsevent = fsevent::FsEvent::new(vec![]);
             fsevent
                 .append_path(dst1.as_path().to_str().unwrap())
@@ -131,7 +143,10 @@ fn internal_observe_folder(run_async: bool) {
                 .unwrap();
             fsevent.observe(sender);
         });
-        None
+
+        let runloop = rx.recv().unwrap();
+
+        Some((runloop.0, observe_thread))
     };
 
     validate_recv(
@@ -152,9 +167,12 @@ fn internal_observe_folder(run_async: bool) {
         ],
     );
 
-    match fsevent_ref_wrapper {
-        Some(r) => async_fsevent.shutdown_observe(r),
-        None => {}
+    if let Some((runloop, thread)) = runloop_and_thread {
+        unsafe { cf::CFRunLoopStop(runloop); }
+
+        thread.join().unwrap();
+    } else {
+        async_fsevent.shutdown_observe();
     }
 }
 
@@ -185,22 +203,33 @@ fn internal_validate_watch_single_file(run_async: bool) {
     drop(file);
 
     let mut async_fsevent = fsevent::FsEvent::new(vec![]);
-    let _fsevent_ref_wrapper = if run_async {
+    let runloop_and_thread = if run_async {
         let dst = dst.clone();
         async_fsevent
             .append_path(dst.as_path().to_str().unwrap())
             .unwrap();
-        Some(async_fsevent.observe_async(sender).unwrap())
+        async_fsevent.observe_async(sender).unwrap();
+
+        None
     } else {
+        let (tx, rx) = std::sync::mpsc::channel();
         let dst = dst.clone();
-        let _t = thread::spawn(move || {
+
+        // Leak the thread.
+        let observe_thread = thread::spawn(move || {
+            let runloop = unsafe { cf::CFRunLoopGetCurrent() };
+            tx.send(CFRunLoopSendWrapper(runloop)).unwrap();
+
             let mut fsevent = fsevent::FsEvent::new(vec![]);
             fsevent
                 .append_path(dst.as_path().to_str().unwrap())
                 .unwrap();
             fsevent.observe(sender);
         });
-        None
+
+        let runloop = rx.recv().unwrap();
+
+        Some((runloop.0, observe_thread))
     };
 
     {
@@ -226,8 +255,11 @@ fn internal_validate_watch_single_file(run_async: bool) {
         )],
     );
 
-    match _fsevent_ref_wrapper {
-        Some(r) => async_fsevent.shutdown_observe(r),
-        None => {}
+    if let Some((runloop, observe_thread)) = runloop_and_thread {
+        unsafe { cf::CFRunLoopStop(runloop); }
+
+        observe_thread.join().unwrap();
+    } else {
+        async_fsevent.shutdown_observe();
     }
 }
