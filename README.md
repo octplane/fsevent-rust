@@ -1,7 +1,7 @@
 # FSEvent API for Rust
 
 Original Author:
-- Pierre Baillet @octplane
+- Pierre Baillet [octplane](https://github.com/octplane)
 
 # Installation
 
@@ -17,12 +17,16 @@ cf examples/ folder.
 
 # Contributors
 
-- Mathieu Poumeyrol @kali
-- ShuYu Wang @andelf
-- Jake Kerr @jakerr
-- Jorge Aparicio @japaric
-- Markus Westerlind @Marwes
-- Bruce Mitchener @waywardmonkeys
-- Zac Brown @zacbrown
-- mtak- @mtak-
-- Yuki Okushi @JohnTitor
+- Mathieu Poumeyrol [kali](https://github.com/kali)
+- ShuYu Wang [andelf](https://github.com/andelf)
+- Jake Kerr [jakerr](https://github.com/jakerr)
+- Jorge Aparicio [japaric](https://github.com/japaric)
+- Markus Westerlind [Marwes](https://github.com/Marwes)
+- Bruce Mitchener [waywardmonkeys](https://github.com/waywardmonkeys)
+- Zac Brown [zacbrown](https://github.com/zacbrown)
+- mtak- [mtak-](https://github.com/mtak-)
+- Yuki Okushi [JohnTitor](https://github.com/JohnTitor)
+- Alexander Kjäll [alexanderkjall](https://github.com/alexanderkjall )
+- Alphyr [a1phy](https://github.com/a1phyr)
+- Simon [simonchatts](https://github.com/simonchatts)
+- Erick Tryzelaar [erickt](https://github.com/erickt)
