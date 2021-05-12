@@ -1,23 +1,26 @@
 #![allow(non_upper_case_globals, non_camel_case_types)]
 
 use core_foundation as cf;
+use std::os::raw::{c_uint, c_void};
 
-pub type FSEventStreamRef = *mut ::std::os::raw::c_void;
+pub type FSEventStreamRef = *mut c_void;
 
 pub type FSEventStreamCallback = extern "C" fn(
     FSEventStreamRef,              // ConstFSEventStreamRef streamRef
-    *mut ::std::os::raw::c_void,   // void *clientCallBackInfo
+    *mut c_void,   // void *clientCallBackInfo
     usize,                         // size_t numEvents
-    *mut ::std::os::raw::c_void,   // void *eventPaths
-    *const ::std::os::raw::c_void, // const FSEventStreamEventFlags eventFlags[]
-    *const ::std::os::raw::c_void, // const FSEventStreamEventId eventIds[]
+    *mut c_void,   // void *eventPaths
+    *const FSEventStreamEventFlags, // const FSEventStreamEventFlags eventFlags[]
+    *const FSEventStreamEventId, // const FSEventStreamEventId eventIds[]
 );
 
 pub type FSEventStreamEventId = u64;
 
-pub const kFSEventStreamEventIdSinceNow: FSEventStreamEventId = 0xFFFFFFFFFFFFFFFF;
+pub type FSEventStreamCreateFlags = c_uint;
 
-pub type FSEventStreamCreateFlags = ::std::os::raw::c_uint;
+pub type FSEventStreamEventFlags = c_uint;
+
+pub const kFSEventStreamEventIdSinceNow: FSEventStreamEventId = 0xFFFFFFFFFFFFFFFF;
 
 pub const kFSEventStreamCreateFlagNone: FSEventStreamCreateFlags = 0x00000000;
 pub const kFSEventStreamCreateFlagUseCFTypes: FSEventStreamCreateFlags = 0x00000001;
@@ -27,8 +30,6 @@ pub const kFSEventStreamCreateFlagIgnoreSelf: FSEventStreamCreateFlags = 0x00000
 pub const kFSEventStreamCreateFlagFileEvents: FSEventStreamCreateFlags = 0x00000010;
 pub const kFSEventStreamCreateFlagMarkSelf: FSEventStreamCreateFlags = 0x00000020;
 pub const kFSEventStreamCreateFlagUseExtendedData: FSEventStreamCreateFlags = 0x00000040;
-
-pub type FSEventStreamEventFlags = ::std::os::raw::c_uint;
 
 pub const kFSEventStreamEventFlagNone: FSEventStreamEventFlags = 0x00000000;
 pub const kFSEventStreamEventFlagMustScanSubDirs: FSEventStreamEventFlags = 0x00000001;
@@ -58,7 +59,7 @@ pub const kFSEventStreamEventFlagItemCloned: FSEventStreamEventFlags = 0x0040000
 #[repr(C)]
 pub struct FSEventStreamContext {
     pub version: cf::CFIndex,
-    pub info: *mut ::std::os::raw::c_void,
+    pub info: *mut c_void,
     pub retain: Option<cf::CFAllocatorRetainCallBack>,
     pub release: Option<cf::CFAllocatorReleaseCallBack>,
     pub copy_description: Option<cf::CFAllocatorCopyDescriptionCallBack>,

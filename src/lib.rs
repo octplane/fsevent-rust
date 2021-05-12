@@ -20,6 +20,8 @@ use std::ptr;
 use std::slice;
 use std::slice::from_raw_parts_mut;
 use std::str::from_utf8;
+use std::os::raw::{c_char,c_void};
+use std::fmt::{Formatter,Display};
 
 use std::sync::mpsc::Sender;
 
@@ -34,16 +36,16 @@ pub struct FsEventRefWrapper {
     ptr: SafePointer,
 }
 
-impl From<*mut ::std::os::raw::c_void> for FsEventRefWrapper {
-    fn from(raw: *mut ::std::os::raw::c_void) -> FsEventRefWrapper {
+impl From<*mut c_void> for FsEventRefWrapper {
+    fn from(raw: *mut c_void) -> FsEventRefWrapper {
         let ptr = raw as SafePointer;
         Self { ptr }
     }
 }
 
-impl From<FsEventRefWrapper> for *mut ::std::os::raw::c_void {
-    fn from(safe: FsEventRefWrapper) -> *mut ::std::os::raw::c_void {
-        safe.ptr as *mut ::std::os::raw::c_void
+impl From<FsEventRefWrapper> for *mut c_void {
+    fn from(safe: FsEventRefWrapper) -> *mut c_void {
+        safe.ptr as *mut c_void
     }
 }
 
@@ -93,8 +95,8 @@ bitflags! {
   }
 }
 
-impl std::fmt::Display for StreamFlags {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl Display for StreamFlags {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         if self.contains(StreamFlags::MUST_SCAN_SUBDIRS) {
             let _d = write!(f, "MUST_SCAN_SUBDIRS ");
         }
@@ -169,7 +171,7 @@ impl std::fmt::Display for StreamFlags {
 }
 
 fn default_stream_context(event_sender: *const Sender<Event>) -> fs::FSEventStreamContext {
-    let ptr = event_sender as *mut ::std::os::raw::c_void;
+    let ptr = event_sender as *mut c_void;
     fs::FSEventStreamContext {
         version: 0,
         info: ptr,
@@ -192,8 +194,8 @@ impl std::error::Error for Error {
     }
 }
 
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl Display for Error {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         self.msg.fmt(f)
     }
 }
@@ -363,20 +365,20 @@ impl FsEvent {
 #[allow(unused_variables)]
 extern "C" fn callback(
     stream_ref: fs::FSEventStreamRef,
-    info: *mut ::std::os::raw::c_void,
+    info: *mut c_void,
     num_events: usize,                          // size_t numEvents
-    event_paths: *mut ::std::os::raw::c_void,   // void *eventPaths
-    event_flags: *const ::std::os::raw::c_void, // const FSEventStreamEventFlags eventFlags[]
-    event_ids: *const ::std::os::raw::c_void,   // const FSEventStreamEventId eventIds[]
+    event_paths: *mut c_void,   // void *eventPaths
+    event_flags: *const fs::FSEventStreamEventFlags, // const FSEventStreamEventFlags eventFlags[]
+    event_ids: *const fs::FSEventStreamEventId,   // const FSEventStreamEventId eventIds[]
 ) {
     unsafe {
-        let event_paths = event_paths as *const *const ::std::os::raw::c_char;
+        let event_paths = event_paths as *const *const c_char;
         let num = num_events;
         let e_ptr = event_flags as *mut u32;
         let i_ptr = event_ids as *mut u64;
         let sender = info as *mut Sender<Event>;
 
-        let paths: &[*const ::std::os::raw::c_char] =
+        let paths: &[*const c_char] =
             std::mem::transmute(slice::from_raw_parts(event_paths, num));
         let flags = from_raw_parts_mut(e_ptr, num);
         let ids = from_raw_parts_mut(i_ptr, num);
