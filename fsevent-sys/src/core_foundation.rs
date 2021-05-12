@@ -156,8 +156,12 @@ pub unsafe fn str_path_to_cfstring_ref(source: &str, err: &mut CFErrorRef) -> CF
     if url.is_null() {
         return ptr::null_mut();
     }
+
     let mut placeholder = CFURLCopyAbsoluteURL(url);
     CFRelease(url);
+    if placeholder.is_null() {
+        return ptr::null_mut();
+    }
 
     let mut imaginary: CFRef = ptr::null_mut();
 
