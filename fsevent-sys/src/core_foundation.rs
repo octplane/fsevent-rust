@@ -66,7 +66,7 @@ pub struct CFArrayCallBacks {
 }
 //impl Clone for CFArrayCallBacks { }
 
-#[link(name = "CoreServices", kind = "framework")]
+#[link(name = "CoreFoundation", kind = "framework")]
 extern "C" {
     pub static kCFTypeArrayCallBacks: CFArrayCallBacks;
     pub static kCFRunLoopDefaultMode: CFStringRef;
