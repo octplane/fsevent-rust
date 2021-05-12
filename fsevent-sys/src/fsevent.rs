@@ -9,8 +9,8 @@ pub type FSEventStreamCallback = extern "C" fn(
     *mut ::std::os::raw::c_void,   // void *clientCallBackInfo
     usize,                         // size_t numEvents
     *mut ::std::os::raw::c_void,   // void *eventPaths
-    *const FSEventStreamEventFlags, // const FSEventStreamEventFlags eventFlags[]
-    *const FSEventStreamEventId, // const FSEventStreamEventId eventIds[]
+    *const ::std::os::raw::c_void, // const FSEventStreamEventFlags eventFlags[]
+    *const ::std::os::raw::c_void, // const FSEventStreamEventId eventIds[]
 );
 
 pub type FSEventStreamEventId = u64;
