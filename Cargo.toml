@@ -4,13 +4,14 @@ name = "fsevent"
 version = "2.0.2"
 authors = [ "Pierre Baillet <pierre@baillet.name>" ]
 description = "Rust bindings to the fsevent-sys macOS API for file changes notifications"
-license="MIT"
+license = "MIT"
 repository = "https://github.com/octplane/fsevent-rust"
+edition = "2018"
 
 [dependencies]
 bitflags = "1"
-fsevent-sys = "3.0.2"
-# fsevent-sys = { "path" = "fsevent-sys" }
+fsevent-sys = "3.1.0"
+# fsevent-sys = { path = "fsevent-sys" }
 
 [dev-dependencies]
 tempfile = "3"
