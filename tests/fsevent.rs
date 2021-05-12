@@ -32,10 +32,7 @@ fn validate_recv(rx: Receiver<Event>, evs: Vec<(String, StreamFlags)>) {
             if let Some(i) = found {
                 evs.remove(i);
             } else {
-                assert!(
-                    false,
-                    format!("actual: {:?} not found in expected: {:?}", actual, evs)
-                );
+                panic!("actual: {:?} not found in expected: {:?}", actual, evs);
             }
         }
         if evs.is_empty() {

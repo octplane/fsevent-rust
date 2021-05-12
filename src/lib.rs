@@ -15,12 +15,9 @@ extern crate fsevent_sys as fsevent;
 use fsevent as fs;
 use fsevent::core_foundation as cf;
 
-use std::convert::AsRef;
 use std::ffi::CStr;
+use std::os::raw::{c_char, c_void};
 use std::ptr;
-use std::slice;
-use std::slice::from_raw_parts_mut;
-use std::str::from_utf8;
 
 use std::sync::mpsc::Sender;
 
@@ -364,35 +361,27 @@ impl FsEvent {
 #[allow(unused_variables)]
 extern "C" fn callback(
     stream_ref: fs::FSEventStreamRef,
-    info: *mut ::std::os::raw::c_void,
-    num_events: usize,                          // size_t numEvents
-    event_paths: *mut ::std::os::raw::c_void,   // void *eventPaths
-    event_flags: *const ::std::os::raw::c_void, // const FSEventStreamEventFlags eventFlags[]
-    event_ids: *const ::std::os::raw::c_void,   // const FSEventStreamEventId eventIds[]
+    info: *mut c_void,
+    num_events: usize,                               // size_t numEvents
+    event_paths: *mut c_void,                        // void *eventPaths
+    event_flags: *const fs::FSEventStreamEventFlags, // const FSEventStreamEventFlags eventFlags[]
+    event_ids: *const fs::FSEventStreamEventId,      // const FSEventStreamEventId eventIds[]
 ) {
     unsafe {
-        let event_paths = event_paths as *const *const ::std::os::raw::c_char;
-        let num = num_events;
-        let e_ptr = event_flags as *mut u32;
-        let i_ptr = event_ids as *mut u64;
         let sender = info as *mut Sender<Event>;
 
-        let paths: &[*const ::std::os::raw::c_char] =
-            std::mem::transmute(slice::from_raw_parts(event_paths, num));
-        let flags = from_raw_parts_mut(e_ptr, num);
-        let ids = from_raw_parts_mut(i_ptr, num);
-
-        for p in 0..num {
-            let i = CStr::from_ptr(paths[p]).to_bytes();
-            let path = from_utf8(i).expect("Invalid UTF8 string.");
-            let flag: StreamFlags = StreamFlags::from_bits(flags[p]).expect(
-                format!("Unable to decode StreamFlags: {} for {}", flags[p], path).as_ref(),
-            );
-            // println!("{}: {}", ids[p], flag);
+        for pos in 0..num_events {
+            let path = CStr::from_ptr(event_paths.add(pos) as *const c_char)
+                .to_str()
+                .expect("Invalid UTF8 string.");
+            let flag = *event_flags.add(pos);
+            let event_id = *event_ids.add(pos);
 
             let event = Event {
-                event_id: ids[p],
-                flag,
+                event_id,
+                flag: StreamFlags::from_bits(flag).unwrap_or_else(|| {
+                    panic!("Unable to decode StreamFlags: {} for {}", flag, path)
+                }),
                 path: path.to_string(),
             };
             let _s = (*sender).send(event);
