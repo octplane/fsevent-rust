@@ -22,35 +22,20 @@ use std::ptr;
 
 use std::sync::mpsc::Sender;
 
-#[cfg(target_pointer_width = "64")]
-type SafePointer = u64;
+// Helper to send the runloop from an observer thread.
+struct CFRunLoopSendWrapper(cf::CFRunLoopRef);
 
-#[cfg(target_pointer_width = "32")]
-type SafePointer = u32;
-
-#[derive(Clone, Copy, Debug)]
-pub struct FsEventRefWrapper {
-    ptr: SafePointer,
-}
-
-impl From<*mut c_void> for FsEventRefWrapper {
-    fn from(raw: *mut c_void) -> FsEventRefWrapper {
-        let ptr = raw as SafePointer;
-        Self { ptr }
-    }
-}
-
-impl From<FsEventRefWrapper> for *mut c_void {
-    fn from(safe: FsEventRefWrapper) -> *mut c_void {
-        safe.ptr as *mut c_void
-    }
-}
+// Safety: According to the Apple documentation, it is safe to send CFRef types across threads.
+//
+// https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/ThreadSafetySummary/ThreadSafetySummary.html
+unsafe impl Send for CFRunLoopSendWrapper {}
 
 pub struct FsEvent {
     paths: Vec<String>,
     since_when: fs::FSEventStreamEventId,
     latency: cf::CFTimeInterval,
     flags: fs::FSEventStreamCreateFlags,
+    runloop: Option<cf::CFRunLoopRef>,
 }
 
 #[derive(Debug)]
@@ -212,6 +197,7 @@ impl FsEvent {
             since_when: fs::kFSEventStreamEventIdSinceNow,
             latency: 0.0,
             flags: fs::kFSEventStreamCreateFlagFileEvents | fs::kFSEventStreamCreateFlagNoDefer,
+            runloop: None,
         }
     }
 
@@ -265,9 +251,9 @@ impl FsEvent {
         since_when: fs::FSEventStreamEventId,
         latency: cf::CFTimeInterval,
         flags: fs::FSEventStreamCreateFlags,
-        paths: FsEventRefWrapper,
+        paths: cf::CFMutableArrayRef,
         event_sender: Sender<Event>,
-        subscription_handle_sender: Option<Sender<FsEventRefWrapper>>,
+        runloop_sender: Option<Sender<CFRunLoopSendWrapper>>,
     ) -> Result<()> {
         let stream_context = default_stream_context(&event_sender);
         let paths = paths.into();
@@ -283,18 +269,11 @@ impl FsEvent {
                 flags,
             );
 
-            // fs::FSEventStreamShow(stream);
-
-            match subscription_handle_sender {
-                Some(ret_tx) => {
-                    let runloop_ref = cf::CFRunLoopGetCurrent();
-                    let runloop_ref_safe = FsEventRefWrapper::from(runloop_ref);
-                    let ptr_val = runloop_ref_safe.ptr.clone();
-                    ret_tx
-                        .send(runloop_ref_safe)
-                        .expect(&format!("Unable to return CFRunLoopRef ({:#X})", ptr_val));
-                }
-                None => {}
+            if let Some(ret_tx) = runloop_sender {
+                let runloop = CFRunLoopSendWrapper(cf::CFRunLoopGetCurrent());
+                ret_tx
+                    .send(runloop)
+                    .expect("unabe to send CFRunLoopRef");
             }
 
             fs::FSEventStreamScheduleWithRunLoop(
@@ -317,45 +296,54 @@ impl FsEvent {
         let native_paths = self
             .build_native_paths()
             .expect("Unable to build CFMutableArrayRef of watched paths.");
-        let safe_native_paths = FsEventRefWrapper::from(native_paths);
         Self::internal_observe(
             self.since_when,
             self.latency,
             self.flags,
-            safe_native_paths,
+            native_paths,
             event_sender,
             None,
         )
         .unwrap();
     }
 
-    pub fn observe_async(&self, event_sender: Sender<Event>) -> Result<FsEventRefWrapper> {
+    pub fn observe_async(&mut self, event_sender: Sender<Event>) -> Result<()> {
         let (ret_tx, ret_rx) = std::sync::mpsc::channel();
         let native_paths = self.build_native_paths()?;
-        let safe_native_paths = FsEventRefWrapper::from(native_paths);
+
+        struct CFMutableArraySendWrapper(cf::CFMutableArrayRef);
+
+        // Safety
+        // - See comment on `CFRunLoopSendWrapper
+        unsafe impl Send for CFMutableArraySendWrapper {}
+
+        let safe_native_paths = CFMutableArraySendWrapper(native_paths);
 
         let since_when = self.since_when;
         let latency = self.latency;
         let flags = self.flags;
+
         std::thread::spawn(move || {
             Self::internal_observe(
                 since_when,
                 latency,
                 flags,
-                safe_native_paths,
+                safe_native_paths.0,
                 event_sender,
                 Some(ret_tx),
             )
         });
 
-        match ret_rx.recv_timeout(std::time::Duration::from_secs(5)) {
-            Ok(v) => Ok(v),
-            Err(e) => Err(Error::from(e)),
-        }
+        self.runloop = Some(ret_rx.recv().unwrap().0);
+
+        Ok(())
     }
 
-    pub fn shutdown_observe(&self, handle: FsEventRefWrapper) {
-        unsafe { cf::CFRunLoopStop(handle.into()) };
+    // Shut down the event stream.
+    pub fn shutdown_observe(&mut self) {
+        if let Some(runloop) = self.runloop.take() {
+            unsafe { cf::CFRunLoopStop(runloop); }
+        }
     }
 }
 
