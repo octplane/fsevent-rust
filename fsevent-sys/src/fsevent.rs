@@ -30,6 +30,7 @@ pub const kFSEventStreamCreateFlagIgnoreSelf: FSEventStreamCreateFlags = 0x00000
 pub const kFSEventStreamCreateFlagFileEvents: FSEventStreamCreateFlags = 0x00000010;
 pub const kFSEventStreamCreateFlagMarkSelf: FSEventStreamCreateFlags = 0x00000020;
 pub const kFSEventStreamCreateFlagUseExtendedData: FSEventStreamCreateFlags = 0x00000040;
+pub const kFSEventStreamCreateFlagFullHistory: FSEventStreamCreateFlags = 0x00000080;
 
 pub const kFSEventStreamEventFlagNone: FSEventStreamEventFlags = 0x00000000;
 pub const kFSEventStreamEventFlagMustScanSubDirs: FSEventStreamEventFlags = 0x00000001;
