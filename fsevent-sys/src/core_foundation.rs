@@ -12,11 +12,13 @@ pub type CFRef = *mut ::std::os::raw::c_void;
 
 pub type CFIndex = ::std::os::raw::c_long;
 pub type CFTimeInterval = f64;
+pub type CFAbsoluteTime = CFTimeInterval;
 
 #[doc(hidden)]
 pub enum CFError {}
 
 pub type CFAllocatorRef = CFRef;
+pub type CFArrayRef = CFRef;
 pub type CFMutableArrayRef = CFRef;
 pub type CFURLRef = CFRef;
 pub type CFErrorRef = *mut CFError;
