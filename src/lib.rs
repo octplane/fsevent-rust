@@ -12,8 +12,12 @@ extern crate bitflags;
 
 extern crate fsevent_sys as fsevent;
 
+use cf::array::CFArrayRef;
+use cf::date::CFTimeInterval;
 use fsevent as fs;
-use fsevent::core_foundation as cf;
+use core_foundation as cf;
+
+use cf::runloop::CFRunLoopRef;
 
 use std::ffi::CStr;
 use std::fmt::{Display, Formatter};
@@ -23,7 +27,7 @@ use std::ptr;
 use std::sync::mpsc::Sender;
 
 // Helper to send the runloop from an observer thread.
-struct CFRunLoopSendWrapper(cf::CFRunLoopRef);
+struct CFRunLoopSendWrapper(CFRunLoopRef);
 
 // Safety: According to the Apple documentation, it is safe to send CFRef types across threads.
 //
@@ -33,9 +37,9 @@ unsafe impl Send for CFRunLoopSendWrapper {}
 pub struct FsEvent {
     paths: Vec<String>,
     since_when: fs::FSEventStreamEventId,
-    latency: cf::CFTimeInterval,
+    latency: CFTimeInterval,
     flags: fs::FSEventStreamCreateFlags,
-    runloop: Option<cf::CFRunLoopRef>,
+    runloop: Option<CFRunLoopRef>,
 }
 
 #[derive(Debug)]
@@ -207,9 +211,9 @@ impl FsEvent {
         Ok(())
     }
 
-    fn build_native_paths(&self) -> Result<cf::CFMutableArrayRef> {
+    fn build_native_paths(&self) -> Result<CFArrayRef> {
         let native_paths = unsafe {
-            cf::CFArrayCreateMutable(cf::kCFAllocatorDefault, 0, &cf::kCFTypeArrayCallBacks)
+            CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks)
         };
 
         if native_paths == std::ptr::null_mut() {
@@ -220,7 +224,7 @@ impl FsEvent {
             for path in &self.paths {
                 unsafe {
                     let mut err = ptr::null_mut();
-                    let cf_path = cf::str_path_to_cfstring_ref(path, &mut err);
+                    let cf_path = str_path_to_cfstring_ref(path, &mut err);
                     if !err.is_null() {
                         let cf_str = cf::CFCopyDescription(err as cf::CFRef);
                         let mut buf = [0; 1024];

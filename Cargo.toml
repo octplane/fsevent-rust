@@ -10,8 +10,8 @@ edition = "2018"
 
 [dependencies]
 bitflags = "1"
-fsevent-sys = "4.0.0"
-# fsevent-sys = { path = "fsevent-sys" }
+fsevent-sys = { path = "fsevent-sys" }
+core-foundation = "0.9.2"
 
 [dev-dependencies]
 tempfile = "3"
