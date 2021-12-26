@@ -1,13 +1,15 @@
 [package]
 name = "fsevent-sys"
-version = "4.0.0"
+version = "5.0.0"
 authors = ["Pierre Baillet <pierre@baillet.name>"]
 description = "Rust bindings to the fsevent macOS API for file changes notifications"
 license = "MIT"
 repository = "https://github.com/octplane/fsevent-rust/tree/master/fsevent-sys"
+edition = "2018"
 
 [dependencies]
 libc = "0.2.68"
+core-foundation = "0.9.2"
 
 [package.metadata.docs.rs]
 targets = ["x86_64-apple-darwin"]

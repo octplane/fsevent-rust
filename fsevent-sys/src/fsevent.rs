@@ -1,6 +1,16 @@
 #![allow(non_upper_case_globals, non_camel_case_types)]
 
-use core_foundation as cf;
+use core_foundation::{
+    array::{CFArrayRef, CFIndex},
+    base::{
+        Boolean, CFAllocatorCopyDescriptionCallBack, CFAllocatorReleaseCallBack,
+        CFAllocatorRetainCallBack,
+    },
+    date::CFTimeInterval,
+    mach_port::CFAllocatorRef,
+    runloop::CFRunLoopRef,
+    string::CFStringRef,
+};
 use std::os::raw::{c_uint, c_void};
 
 pub type FSEventStreamRef = *mut c_void;
@@ -59,41 +69,39 @@ pub const kFSEventStreamEventFlagItemCloned: FSEventStreamEventFlags = 0x0040000
 
 #[repr(C)]
 pub struct FSEventStreamContext {
-    pub version: cf::CFIndex,
+    pub version: CFIndex,
     pub info: *mut c_void,
-    pub retain: Option<cf::CFAllocatorRetainCallBack>,
-    pub release: Option<cf::CFAllocatorReleaseCallBack>,
-    pub copy_description: Option<cf::CFAllocatorCopyDescriptionCallBack>,
+    pub retain: Option<CFAllocatorRetainCallBack>,
+    pub release: Option<CFAllocatorReleaseCallBack>,
+    pub copy_description: Option<CFAllocatorCopyDescriptionCallBack>,
 }
-// impl Clone for FSEventStreamContext { }
-// impl Copy for FSEventStreamContext { }
 
 #[link(name = "CoreServices", kind = "framework")]
 extern "C" {
     pub fn FSEventStreamCreate(
-        allocator: cf::CFAllocatorRef,
+        allocator: CFAllocatorRef,
         callback: FSEventStreamCallback,
         context: *const FSEventStreamContext,
-        pathsToWatch: cf::CFMutableArrayRef,
+        pathsToWatch: CFArrayRef,
         sinceWhen: FSEventStreamEventId,
-        latency: cf::CFTimeInterval,
+        latency: CFTimeInterval,
         flags: FSEventStreamCreateFlags,
     ) -> FSEventStreamRef;
 
     pub fn FSEventStreamShow(stream_ref: FSEventStreamRef);
     pub fn FSEventStreamScheduleWithRunLoop(
         stream_ref: FSEventStreamRef,
-        run_loop: cf::CFRunLoopRef,
-        run_loop_mode: cf::CFStringRef,
+        run_loop: CFRunLoopRef,
+        run_loop_mode: CFStringRef,
     );
 
     pub fn FSEventStreamUnscheduleFromRunLoop(
         stream_ref: FSEventStreamRef,
-        run_loop: cf::CFRunLoopRef,
-        run_loop_mode: cf::CFStringRef,
+        run_loop: CFRunLoopRef,
+        run_loop_mode: CFStringRef,
     );
 
-    pub fn FSEventStreamStart(stream_ref: FSEventStreamRef) -> cf::Boolean;
+    pub fn FSEventStreamStart(stream_ref: FSEventStreamRef) -> Boolean;
     pub fn FSEventStreamFlushSync(stream_ref: FSEventStreamRef);
     pub fn FSEventStreamStop(stream_ref: FSEventStreamRef);
     pub fn FSEventStreamInvalidate(stream_ref: FSEventStreamRef);
