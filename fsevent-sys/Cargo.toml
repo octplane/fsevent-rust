@@ -1,6 +1,6 @@
 [package]
 name = "fsevent-sys"
-version = "4.1.0"
+version = "5.0.0"
 authors = ["Pierre Baillet <pierre@baillet.name>"]
 description = "Rust bindings to the fsevent macOS API for file changes notifications"
 license = "MIT"
@@ -9,7 +9,10 @@ edition = "2018"
 
 [dependencies]
 dispatch2 = { version = "0.2.0", default-features = false, features = ["alloc"] }
-libc = "0.2.68"
+core-foundation = "0.9.2"
 
 [package.metadata.docs.rs]
-targets = ["x86_64-apple-darwin"]
+targets = [
+    "x86_64-apple-darwin",
+    "aarch64-apple-darwin",
+]

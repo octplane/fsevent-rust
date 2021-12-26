@@ -1,19 +1,19 @@
-#![cfg(target_os="macos")]
+#![cfg(target_os = "macos")]
 
-use fsevent_sys::core_foundation as cf;
+use core_foundation::runloop::{CFRunLoopGetCurrent, CFRunLoopRef, CFRunLoopStop};
 use fsevent::*;
-use std::fs;
-use std::fs::read_link;
-use std::fs::OpenOptions;
-use std::io::Write;
-use std::path::{Component, PathBuf};
-use std::thread;
-use std::time::{Duration, SystemTime};
-
-use std::sync::mpsc::{channel, Receiver};
+use std::{
+    fs,
+    fs::{read_link, OpenOptions},
+    io::Write,
+    path::{Component, PathBuf},
+    sync::mpsc::{channel, Receiver},
+    thread,
+    time::{Duration, SystemTime},
+};
 
 // Helper to send the runloop from an observer thread.
-struct CFRunLoopSendWrapper(cf::CFRunLoopRef);
+struct CFRunLoopSendWrapper(CFRunLoopRef);
 
 // Safety: According to the Apple documentation, it is safe to send CFRef types across threads.
 //
@@ -128,7 +128,7 @@ fn internal_observe_folder(run_async: bool) {
     } else {
         let (tx, rx) = std::sync::mpsc::channel();
         let observe_thread = thread::spawn(move || {
-            let runloop = unsafe { cf::CFRunLoopGetCurrent() };
+            let runloop = unsafe { CFRunLoopGetCurrent() };
             tx.send(CFRunLoopSendWrapper(runloop)).unwrap();
 
             let mut fsevent = fsevent::FsEvent::new(vec![]);
@@ -168,7 +168,9 @@ fn internal_observe_folder(run_async: bool) {
     );
 
     if let Some((runloop, thread)) = runloop_and_thread {
-        unsafe { cf::CFRunLoopStop(runloop); }
+        unsafe {
+            CFRunLoopStop(runloop);
+        }
 
         thread.join().unwrap();
     } else {
@@ -217,7 +219,7 @@ fn internal_validate_watch_single_file(run_async: bool) {
 
         // Leak the thread.
         let observe_thread = thread::spawn(move || {
-            let runloop = unsafe { cf::CFRunLoopGetCurrent() };
+            let runloop = unsafe { CFRunLoopGetCurrent() };
             tx.send(CFRunLoopSendWrapper(runloop)).unwrap();
 
             let mut fsevent = fsevent::FsEvent::new(vec![]);
@@ -256,7 +258,9 @@ fn internal_validate_watch_single_file(run_async: bool) {
     );
 
     if let Some((runloop, observe_thread)) = runloop_and_thread {
-        unsafe { cf::CFRunLoopStop(runloop); }
+        unsafe {
+            CFRunLoopStop(runloop);
+        }
 
         observe_thread.join().unwrap();
     } else {

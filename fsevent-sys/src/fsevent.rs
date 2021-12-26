@@ -1,13 +1,21 @@
 #![allow(non_upper_case_globals, non_camel_case_types)]
 
-use crate::core_foundation::{
-    Boolean, CFAbsoluteTime, CFAllocatorCopyDescriptionCallBack, CFAllocatorRef,
-    CFAllocatorReleaseCallBack, CFAllocatorRetainCallBack, CFArrayRef, CFIndex, CFRunLoopRef,
-    CFStringRef, CFTimeInterval,
+use core_foundation::{
+    array::{CFArrayRef, CFIndex},
+    base::{
+        Boolean, CFAllocatorCopyDescriptionCallBack, CFAllocatorReleaseCallBack,
+        CFAllocatorRetainCallBack,
+    },
+    date::{CFAbsoluteTime, CFTimeInterval},
+    mach_port::CFAllocatorRef,
+    runloop::CFRunLoopRef,
+    string::CFStringRef,
 };
 use dispatch2::ffi::dispatch_queue_t;
-use libc::dev_t;
-use std::os::raw::{c_uint, c_void};
+use std::os::{
+    raw::{c_uint, c_void},
+    unix::raw::dev_t,
+};
 
 pub type FSEventStreamRef = *mut c_void;
 pub type ConstFSEventStreamRef = *const c_void;
