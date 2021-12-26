@@ -6,14 +6,16 @@ use core_foundation::{
         Boolean, CFAllocatorCopyDescriptionCallBack, CFAllocatorReleaseCallBack,
         CFAllocatorRetainCallBack,
     },
-    date::CFTimeInterval,
+    date::{CFAbsoluteTime, CFTimeInterval},
     mach_port::CFAllocatorRef,
     runloop::CFRunLoopRef,
     string::CFStringRef,
 };
+use libc::dev_t;
 use std::os::raw::{c_uint, c_void};
 
 pub type FSEventStreamRef = *mut c_void;
+pub type ConstFSEventStreamRef = *const c_void;
 
 pub type FSEventStreamCallback = extern "C" fn(
     FSEventStreamRef,               // ConstFSEventStreamRef streamRef
@@ -76,8 +78,11 @@ pub struct FSEventStreamContext {
     pub copy_description: Option<CFAllocatorCopyDescriptionCallBack>,
 }
 
+// https://developer.apple.com/documentation/coreservices/file_system_events
 #[link(name = "CoreServices", kind = "framework")]
 extern "C" {
+    pub fn FSEventStreamCopyDescription(stream_ref: ConstFSEventStreamRef) -> CFStringRef;
+    pub fn FSEventStreamCopyPathsBeingWatched(streamRef: ConstFSEventStreamRef) -> CFArrayRef;
     pub fn FSEventStreamCreate(
         allocator: CFAllocatorRef,
         callback: FSEventStreamCallback,
@@ -87,23 +92,50 @@ extern "C" {
         latency: CFTimeInterval,
         flags: FSEventStreamCreateFlags,
     ) -> FSEventStreamRef;
-
-    pub fn FSEventStreamShow(stream_ref: FSEventStreamRef);
+    pub fn FSEventStreamCreateRelativeToDevice(
+        allocator: CFAllocatorRef,
+        callback: FSEventStreamCallback,
+        context: *const FSEventStreamContext,
+        deviceToWatch: dev_t,
+        pathsToWatchRelativeToDevice: CFArrayRef,
+        sinceWhen: FSEventStreamEventId,
+        latency: CFTimeInterval,
+        flags: FSEventStreamCreateFlags,
+    ) -> FSEventStreamRef;
+    pub fn FSEventStreamFlushAsync(stream_ref: FSEventStreamRef) -> FSEventStreamEventId;
+    pub fn FSEventStreamFlushSync(streamRef: FSEventStreamRef);
+    pub fn FSEventStreamGetDeviceBeingWatched(stream_ref: ConstFSEventStreamRef) -> dev_t;
+    pub fn FSEventStreamGetLatestEventId(stream_ref: ConstFSEventStreamRef)
+        -> FSEventStreamEventId;
+    pub fn FSEventStreamInvalidate(stream_ref: FSEventStreamRef);
+    pub fn FSEventStreamRelease(stream_ref: FSEventStreamRef);
+    pub fn FSEventStreamRetain(stream_ref: FSEventStreamRef);
     pub fn FSEventStreamScheduleWithRunLoop(
         stream_ref: FSEventStreamRef,
         run_loop: CFRunLoopRef,
         run_loop_mode: CFStringRef,
     );
-
+    // pub fn FSEventStreamSetDispatchQueue(streamRef: FSEventStreamRef, q: DispatchQueue);
+    pub fn FSEventStreamSetExclusionPaths(
+        stream_ref: FSEventStreamRef,
+        paths_to_exclude: CFArrayRef,
+    ) -> Boolean;
+    pub fn FSEventStreamShow(stream_ref: FSEventStreamRef);
+    pub fn FSEventStreamStart(stream_ref: FSEventStreamRef) -> Boolean;
+    pub fn FSEventStreamStop(stream_ref: FSEventStreamRef);
     pub fn FSEventStreamUnscheduleFromRunLoop(
         stream_ref: FSEventStreamRef,
         run_loop: CFRunLoopRef,
         run_loop_mode: CFStringRef,
     );
-
-    pub fn FSEventStreamStart(stream_ref: FSEventStreamRef) -> Boolean;
-    pub fn FSEventStreamFlushSync(stream_ref: FSEventStreamRef);
-    pub fn FSEventStreamStop(stream_ref: FSEventStreamRef);
-    pub fn FSEventStreamInvalidate(stream_ref: FSEventStreamRef);
-    pub fn FSEventStreamRelease(stream_ref: FSEventStreamRef);
+    // pub fn FSEventsCopyUUIDForDevice(dev: dev_t) -> CFUUID;
+    pub fn FSEventsGetCurrentEventId() -> FSEventStreamEventId;
+    pub fn FSEventsGetLastEventIdForDeviceBeforeTime(
+        dev: dev_t,
+        time: CFAbsoluteTime,
+    ) -> FSEventStreamEventId;
+    pub fn FSEventsPurgeEventsForDeviceUpToEventId(
+        dev: dev_t,
+        eventId: FSEventStreamEventId,
+    ) -> Boolean;
 }
