@@ -148,7 +148,7 @@ extern "C" {
 
 pub unsafe fn str_path_to_cfstring_ref(source: &str, err: &mut CFErrorRef) -> CFStringRef {
     let c_path = CString::new(source).unwrap();
-    let c_len = libc::strlen(c_path.as_ptr());
+    let c_len = c_path.as_bytes().len();
     let mut url = CFURLCreateFromFileSystemRepresentation(
         kCFAllocatorDefault,
         c_path.as_ptr(),
