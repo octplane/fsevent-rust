@@ -8,6 +8,7 @@ repository = "https://github.com/octplane/fsevent-rust/tree/master/fsevent-sys"
 edition = "2018"
 
 [dependencies]
+dispatch2 = { version = "0.2.0", default-features = false, features = ["alloc"] }
 libc = "0.2.68"
 
 [package.metadata.docs.rs]
