@@ -118,7 +118,7 @@ unsafe extern "C" {
         run_loop: CFRunLoopRef,
         run_loop_mode: CFStringRef,
     );
-    pub fn FSEventStreamSetDispatchQueue(stream_ref: FSEventStreamRef, q: DispatchQueue);
+    pub fn FSEventStreamSetDispatchQueue(stream_ref: FSEventStreamRef, q: &DispatchQueue);
     pub fn FSEventStreamSetExclusionPaths(
         stream_ref: FSEventStreamRef,
         paths_to_exclude: CFArrayRef,
