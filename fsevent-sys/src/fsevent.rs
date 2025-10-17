@@ -5,6 +5,7 @@ use crate::core_foundation::{
     CFAllocatorReleaseCallBack, CFAllocatorRetainCallBack, CFArrayRef, CFIndex, CFRunLoopRef,
     CFStringRef, CFTimeInterval,
 };
+use dispatch2::ffi::dispatch_queue_t;
 use libc::dev_t;
 use std::os::raw::{c_uint, c_void};
 
@@ -74,7 +75,7 @@ pub struct FSEventStreamContext {
 
 // https://developer.apple.com/documentation/coreservices/file_system_events
 #[link(name = "CoreServices", kind = "framework")]
-extern "C" {
+unsafe extern "C" {
     pub fn FSEventStreamCopyDescription(stream_ref: ConstFSEventStreamRef) -> CFStringRef;
     pub fn FSEventStreamCopyPathsBeingWatched(streamRef: ConstFSEventStreamRef) -> CFArrayRef;
     pub fn FSEventStreamCreate(
@@ -109,7 +110,7 @@ extern "C" {
         run_loop: CFRunLoopRef,
         run_loop_mode: CFStringRef,
     );
-    // pub fn FSEventStreamSetDispatchQueue(streamRef: FSEventStreamRef, q: DispatchQueue);
+    pub fn FSEventStreamSetDispatchQueue(stream_ref: FSEventStreamRef, q: dispatch_queue_t);
     pub fn FSEventStreamSetExclusionPaths(
         stream_ref: FSEventStreamRef,
         paths_to_exclude: CFArrayRef,
