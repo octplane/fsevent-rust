@@ -11,7 +11,7 @@ use core_foundation::{
     runloop::CFRunLoopRef,
     string::CFStringRef,
 };
-use dispatch2::ffi::dispatch_queue_t;
+use dispatch2::DispatchQueue;
 use std::os::{
     raw::{c_uint, c_void},
     unix::raw::dev_t,
@@ -118,7 +118,7 @@ unsafe extern "C" {
         run_loop: CFRunLoopRef,
         run_loop_mode: CFStringRef,
     );
-    pub fn FSEventStreamSetDispatchQueue(stream_ref: FSEventStreamRef, q: dispatch_queue_t);
+    pub fn FSEventStreamSetDispatchQueue(stream_ref: FSEventStreamRef, q: DispatchQueue);
     pub fn FSEventStreamSetExclusionPaths(
         stream_ref: FSEventStreamRef,
         paths_to_exclude: CFArrayRef,
