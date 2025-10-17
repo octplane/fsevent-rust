@@ -1,12 +1,9 @@
-extern crate fsevent;
+use std::{sync::mpsc::channel, thread};
 
-use std::sync::mpsc::channel;
-use std::thread;
-
-#[cfg(not(target_os="macos"))]
+#[cfg(not(target_os = "macos"))]
 fn main() {}
 
-#[cfg(target_os="macos")]
+#[cfg(target_os = "macos")]
 fn main() {
     let (sender, receiver) = channel();
 
@@ -24,7 +21,7 @@ fn main() {
             Err(e) => match e {
                 std::sync::mpsc::RecvTimeoutError::Disconnected => break,
                 _ => {} // This is the case where nothing entered the channel buffer (no file mods).
-            }
+            },
         }
     }
 

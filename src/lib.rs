@@ -5,25 +5,28 @@
     unused_import_braces,
     unused_qualifications
 )]
-#![cfg_attr(feature = "cargo-clippy", allow(unreadable_literal))]
 
-#[macro_use]
-extern crate bitflags;
-
-extern crate fsevent_sys as fsevent;
-
-use fsevent as fs;
-use fsevent::core_foundation as cf;
-
-use std::ffi::CStr;
-use std::fmt::{Display, Formatter};
-use std::os::raw::{c_char, c_void};
-use std::ptr;
-
-use std::sync::mpsc::Sender;
+use bitflags::bitflags;
+use core_foundation::{
+    array::CFArray,
+    base::{kCFAllocatorDefault, TCFType},
+    date::CFTimeInterval,
+    runloop::{
+        kCFRunLoopDefaultMode, CFRunLoopGetCurrent, CFRunLoopRef, CFRunLoopRun, CFRunLoopStop,
+    },
+    string::CFString,
+};
+use fsevent_sys as fs;
+use std::{
+    ffi::CStr,
+    fmt::{Display, Formatter},
+    os::raw::c_void,
+    slice,
+    sync::mpsc::Sender,
+};
 
 // Helper to send the runloop from an observer thread.
-struct CFRunLoopSendWrapper(cf::CFRunLoopRef);
+struct CFRunLoopSendWrapper(CFRunLoopRef);
 
 // Safety: According to the Apple documentation, it is safe to send CFRef types across threads.
 //
@@ -33,9 +36,9 @@ unsafe impl Send for CFRunLoopSendWrapper {}
 pub struct FsEvent {
     paths: Vec<String>,
     since_when: fs::FSEventStreamEventId,
-    latency: cf::CFTimeInterval,
+    latency: CFTimeInterval,
     flags: fs::FSEventStreamCreateFlags,
-    runloop: Option<cf::CFRunLoopRef>,
+    runloop: Option<CFRunLoopRef>,
 }
 
 #[derive(Debug)]
@@ -163,7 +166,7 @@ fn default_stream_context(event_sender: *const Sender<Event>) -> fs::FSEventStre
     }
 }
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 #[derive(Debug)]
 pub struct Error {
@@ -179,14 +182,6 @@ impl std::error::Error for Error {
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         self.msg.fmt(f)
-    }
-}
-
-impl From<std::sync::mpsc::RecvTimeoutError> for Error {
-    fn from(err: std::sync::mpsc::RecvTimeoutError) -> Error {
-        Self {
-            msg: err.to_string(),
-        }
     }
 }
 
@@ -207,83 +202,45 @@ impl FsEvent {
         Ok(())
     }
 
-    fn build_native_paths(&self) -> Result<cf::CFMutableArrayRef> {
-        let native_paths = unsafe {
-            cf::CFArrayCreateMutable(cf::kCFAllocatorDefault, 0, &cf::kCFTypeArrayCallBacks)
-        };
-
-        if native_paths == std::ptr::null_mut() {
-            Err(Error {
-                msg: "Unable to allocate CFMutableArrayRef".to_string(),
-            })
-        } else {
-            for path in &self.paths {
-                unsafe {
-                    let mut err = ptr::null_mut();
-                    let cf_path = cf::str_path_to_cfstring_ref(path, &mut err);
-                    if !err.is_null() {
-                        let cf_str = cf::CFCopyDescription(err as cf::CFRef);
-                        let mut buf = [0; 1024];
-                        cf::CFStringGetCString(
-                            cf_str,
-                            buf.as_mut_ptr(),
-                            buf.len() as cf::CFIndex,
-                            cf::kCFStringEncodingUTF8,
-                        );
-                        return Err(Error {
-                            msg: CStr::from_ptr(buf.as_ptr())
-                                .to_str()
-                                .unwrap_or("Unknown error")
-                                .to_string(),
-                        });
-                    } else {
-                        cf::CFArrayAppendValue(native_paths, cf_path);
-                        cf::CFRelease(cf_path);
-                    }
-                }
-            }
-
-            Ok(native_paths)
-        }
+    fn build_native_paths(&self) -> CFArray<CFString> {
+        let paths: Vec<_> = self.paths.iter().map(|x| CFString::new(x)).collect();
+        CFArray::from_CFTypes(&paths)
     }
 
     fn internal_observe(
         since_when: fs::FSEventStreamEventId,
-        latency: cf::CFTimeInterval,
+        latency: CFTimeInterval,
         flags: fs::FSEventStreamCreateFlags,
-        paths: cf::CFMutableArrayRef,
+        paths: CFArray<CFString>,
         event_sender: Sender<Event>,
         runloop_sender: Option<Sender<CFRunLoopSendWrapper>>,
     ) -> Result<()> {
         let stream_context = default_stream_context(&event_sender);
-        let paths = paths.into();
 
         unsafe {
             let stream = fs::FSEventStreamCreate(
-                cf::kCFAllocatorDefault,
+                kCFAllocatorDefault,
                 callback,
                 &stream_context,
-                paths,
+                paths.as_concrete_TypeRef() as _,
                 since_when,
                 latency,
                 flags,
             );
 
             if let Some(ret_tx) = runloop_sender {
-                let runloop = CFRunLoopSendWrapper(cf::CFRunLoopGetCurrent());
-                ret_tx
-                    .send(runloop)
-                    .expect("unabe to send CFRunLoopRef");
+                let runloop = CFRunLoopSendWrapper(CFRunLoopGetCurrent());
+                ret_tx.send(runloop).expect("unabe to send CFRunLoopRef");
             }
 
             fs::FSEventStreamScheduleWithRunLoop(
                 stream,
-                cf::CFRunLoopGetCurrent(),
-                cf::kCFRunLoopDefaultMode,
+                CFRunLoopGetCurrent(),
+                kCFRunLoopDefaultMode,
             );
 
             fs::FSEventStreamStart(stream);
-            cf::CFRunLoopRun();
+            CFRunLoopRun();
 
             fs::FSEventStreamFlushSync(stream);
             fs::FSEventStreamStop(stream);
@@ -293,9 +250,7 @@ impl FsEvent {
     }
 
     pub fn observe(&self, event_sender: Sender<Event>) {
-        let native_paths = self
-            .build_native_paths()
-            .expect("Unable to build CFMutableArrayRef of watched paths.");
+        let native_paths = self.build_native_paths();
         Self::internal_observe(
             self.since_when,
             self.latency,
@@ -309,16 +264,15 @@ impl FsEvent {
 
     pub fn observe_async(&mut self, event_sender: Sender<Event>) -> Result<()> {
         let (ret_tx, ret_rx) = std::sync::mpsc::channel();
-        let native_paths = self.build_native_paths()?;
+        let native_paths = self.build_native_paths();
 
-        struct CFMutableArraySendWrapper(cf::CFMutableArrayRef);
+        struct CFMutableArraySendWrapper(CFArray<CFString>);
 
         // Safety
         // - See comment on `CFRunLoopSendWrapper
         unsafe impl Send for CFMutableArraySendWrapper {}
 
-        let safe_native_paths = CFMutableArraySendWrapper(native_paths);
-
+        let paths = CFMutableArraySendWrapper(native_paths);
         let since_when = self.since_when;
         let latency = self.latency;
         let flags = self.flags;
@@ -328,7 +282,7 @@ impl FsEvent {
                 since_when,
                 latency,
                 flags,
-                safe_native_paths.0,
+                paths.0,
                 event_sender,
                 Some(ret_tx),
             )
@@ -342,7 +296,9 @@ impl FsEvent {
     // Shut down the event stream.
     pub fn shutdown_observe(&mut self) {
         if let Some(runloop) = self.runloop.take() {
-            unsafe { cf::CFRunLoopStop(runloop); }
+            unsafe {
+                CFRunLoopStop(runloop);
+            }
         }
     }
 }
@@ -355,25 +311,30 @@ extern "C" fn callback(
     event_flags: *const fs::FSEventStreamEventFlags, // const FSEventStreamEventFlags eventFlags[]
     event_ids: *const fs::FSEventStreamEventId,      // const FSEventStreamEventId eventIds[]
 ) {
-    unsafe {
-        let event_paths = event_paths as *const *const c_char;
-        let sender = info as *mut Sender<Event>;
-
-        for pos in 0..num_events {
-            let path = CStr::from_ptr(*event_paths.add(pos))
-                .to_str()
-                .expect("Invalid UTF8 string.");
-            let flag = *event_flags.add(pos);
-            let event_id = *event_ids.add(pos);
-
-            let event = Event {
-                event_id: event_id,
-                flag: StreamFlags::from_bits(flag).unwrap_or_else(|| {
-                    panic!("Unable to decode StreamFlags: {} for {}", flag, path)
-                }),
-                path: path.to_string(),
-            };
-            let _s = (*sender).send(event);
-        }
+    let event_paths = unsafe { slice::from_raw_parts(event_paths as *const *const i8, num_events) };
+    let event_flags = unsafe { slice::from_raw_parts(event_flags, num_events) };
+    let event_ids = unsafe { slice::from_raw_parts(event_ids, num_events) };
+    let sender = unsafe {
+        (info as *mut Sender<Event>)
+            .as_mut()
+            .expect("Invalid Sender<Event>.")
+    };
+    for event in
+        event_paths
+            .iter()
+            .zip(event_flags)
+            .zip(event_ids)
+            .map(|((&path, &flag), &id)| unsafe {
+                let path = CStr::from_ptr(path).to_str().expect("Invalid UTF8 string.");
+                Event {
+                    event_id: id,
+                    flag: StreamFlags::from_bits(flag).unwrap_or_else(|| {
+                        panic!("Unable to decode StreamFlags: {} for {}", flag, path)
+                    }),
+                    path: path.to_string(),
+                }
+            })
+    {
+        let _s = sender.send(event);
     }
 }
