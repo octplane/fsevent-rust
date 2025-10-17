@@ -229,6 +229,7 @@ fn internal_validate_watch_single_file(run_async: bool) {
             let mut file = OpenOptions::new()
                 .write(true)
                 .create(true)
+                .truncate(true)
                 .open(dst.as_path())
                 .unwrap();
             file.write_all(b"create").unwrap();
@@ -237,11 +238,7 @@ fn internal_validate_watch_single_file(run_async: bool) {
 
             // Wait a bit then modify
             thread::sleep(Duration::from_millis(100));
-            let mut file = OpenOptions::new()
-                .write(true)
-                .append(true)
-                .open(dst.as_path())
-                .unwrap();
+            let mut file = OpenOptions::new().append(true).open(dst.as_path()).unwrap();
             file.write_all(b"foo").unwrap();
             file.flush().unwrap();
         });
