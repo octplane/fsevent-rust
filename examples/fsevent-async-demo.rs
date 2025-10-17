@@ -18,10 +18,12 @@ fn main() {
         let duration = std::time::Duration::from_secs(1);
         match receiver.recv_timeout(duration) {
             Ok(val) => println!("{:?}", val),
-            Err(e) => match e {
-                std::sync::mpsc::RecvTimeoutError::Disconnected => break,
-                _ => {} // This is the case where nothing entered the channel buffer (no file mods).
-            },
+            // This is the case where nothing entered the channel buffer (no file mods).
+            Err(e) => {
+                if e == std::sync::mpsc::RecvTimeoutError::Disconnected {
+                    break;
+                }
+            }
         }
     }
 

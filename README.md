@@ -11,9 +11,40 @@ In `cargo.toml`
 fsevent = "*"
 ```
 
+
 # Usage
 
 cf examples/ folder.
+
+# Contributing
+
+Contributions are welcome! Here's how you can help:
+
+## Reporting Issues
+
+If you find a bug or have a feature request, please open an issue on GitHub with:
+- A clear description of the problem or suggestion
+- Steps to reproduce (for bugs)
+- Expected vs actual behavior
+- Your environment details (OS version, Rust version)
+
+## Pull Requests
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Run tests: `cargo test`
+5. Run clippy: `cargo clippy`
+6. Format your code: `cargo fmt`
+7. Commit your changes (`git commit -m 'Add some amazing feature'`)
+8. Push to your branch (`git push origin feature/amazing-feature`)
+9. Open a Pull Request
+
+Please ensure:
+- All tests pass
+- Code follows Rust style guidelines (enforced by `rustfmt`)
+- New features include tests
+- Documentation is updated if needed
 
 # Contributors
 
