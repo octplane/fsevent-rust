@@ -15,6 +15,18 @@ use objc2_core_foundation::{
 use objc2_core_services::FSEventStreamScheduleWithRunLoop;
 use objc2_core_services::{
     kFSEventStreamCreateFlagFileEvents, kFSEventStreamCreateFlagNoDefer,
+    kFSEventStreamEventFlagEventIdsWrapped, kFSEventStreamEventFlagHistoryDone,
+    kFSEventStreamEventFlagItemChangeOwner, kFSEventStreamEventFlagItemCloned,
+    kFSEventStreamEventFlagItemCreated, kFSEventStreamEventFlagItemFinderInfoMod,
+    kFSEventStreamEventFlagItemInodeMetaMod, kFSEventStreamEventFlagItemIsDir,
+    kFSEventStreamEventFlagItemIsFile, kFSEventStreamEventFlagItemIsHardlink,
+    kFSEventStreamEventFlagItemIsLastHardlink, kFSEventStreamEventFlagItemIsSymlink,
+    kFSEventStreamEventFlagItemModified, kFSEventStreamEventFlagItemRemoved,
+    kFSEventStreamEventFlagItemRenamed, kFSEventStreamEventFlagItemXattrMod,
+    kFSEventStreamEventFlagKernelDropped, kFSEventStreamEventFlagMount,
+    kFSEventStreamEventFlagMustScanSubDirs, kFSEventStreamEventFlagNone,
+    kFSEventStreamEventFlagOwnEvent, kFSEventStreamEventFlagRootChanged,
+    kFSEventStreamEventFlagUnmount, kFSEventStreamEventFlagUserDropped,
     kFSEventStreamEventIdSinceNow, ConstFSEventStreamRef, FSEventStreamContext,
     FSEventStreamCreate, FSEventStreamCreateFlags, FSEventStreamEventFlags, FSEventStreamEventId,
     FSEventStreamFlushSync, FSEventStreamStart, FSEventStreamStop,
@@ -56,30 +68,30 @@ pub struct Event {
 bitflags! {
   #[repr(C)]
   pub struct StreamFlags: u32 {
-    const NONE = 0x00000000;
-    const MUST_SCAN_SUBDIRS = 0x00000001;
-    const USER_DROPPED = 0x00000002;
-    const KERNEL_DROPPED = 0x00000004;
-    const IDS_WRAPPED = 0x00000008;
-    const HISTORY_DONE = 0x00000010;
-    const ROOT_CHANGED = 0x00000020;
-    const MOUNT = 0x00000040;
-    const UNMOUNT = 0x00000080;
-    const ITEM_CREATED = 0x00000100;
-    const ITEM_REMOVED = 0x00000200;
-    const INODE_META_MOD = 0x00000400;
-    const ITEM_RENAMED = 0x00000800;
-    const ITEM_MODIFIED = 0x00001000;
-    const FINDER_INFO_MOD = 0x00002000;
-    const ITEM_CHANGE_OWNER = 0x00004000;
-    const ITEM_XATTR_MOD = 0x00008000;
-    const IS_FILE = 0x00010000;
-    const IS_DIR = 0x00020000;
-    const IS_SYMLINK = 0x00040000;
-    const OWN_EVENT = 0x00080000;
-    const IS_HARDLINK = 0x00100000;
-    const IS_LAST_HARDLINK = 0x00200000;
-    const ITEM_CLONED = 0x400000;
+    const NONE = kFSEventStreamEventFlagNone;
+    const MUST_SCAN_SUBDIRS = kFSEventStreamEventFlagMustScanSubDirs;
+    const USER_DROPPED = kFSEventStreamEventFlagUserDropped;
+    const KERNEL_DROPPED = kFSEventStreamEventFlagKernelDropped;
+    const IDS_WRAPPED = kFSEventStreamEventFlagEventIdsWrapped;
+    const HISTORY_DONE = kFSEventStreamEventFlagHistoryDone;
+    const ROOT_CHANGED = kFSEventStreamEventFlagRootChanged;
+    const MOUNT = kFSEventStreamEventFlagMount;
+    const UNMOUNT = kFSEventStreamEventFlagUnmount;
+    const ITEM_CREATED = kFSEventStreamEventFlagItemCreated;
+    const ITEM_REMOVED = kFSEventStreamEventFlagItemRemoved;
+    const INODE_META_MOD = kFSEventStreamEventFlagItemInodeMetaMod;
+    const ITEM_RENAMED = kFSEventStreamEventFlagItemRenamed;
+    const ITEM_MODIFIED = kFSEventStreamEventFlagItemModified;
+    const FINDER_INFO_MOD = kFSEventStreamEventFlagItemFinderInfoMod;
+    const ITEM_CHANGE_OWNER = kFSEventStreamEventFlagItemChangeOwner;
+    const ITEM_XATTR_MOD = kFSEventStreamEventFlagItemXattrMod;
+    const IS_FILE = kFSEventStreamEventFlagItemIsFile;
+    const IS_DIR = kFSEventStreamEventFlagItemIsDir;
+    const IS_SYMLINK = kFSEventStreamEventFlagItemIsSymlink;
+    const OWN_EVENT = kFSEventStreamEventFlagOwnEvent;
+    const IS_HARDLINK = kFSEventStreamEventFlagItemIsHardlink;
+    const IS_LAST_HARDLINK = kFSEventStreamEventFlagItemIsLastHardlink;
+    const ITEM_CLONED = kFSEventStreamEventFlagItemCloned;
   }
 }
 
