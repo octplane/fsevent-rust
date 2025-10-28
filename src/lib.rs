@@ -7,26 +7,41 @@
 )]
 
 use bitflags::bitflags;
-use core_foundation::{
-    array::CFArray,
-    base::{kCFAllocatorDefault, TCFType},
-    date::CFTimeInterval,
-    runloop::{
-        kCFRunLoopDefaultMode, CFRunLoopGetCurrent, CFRunLoopRef, CFRunLoopRun, CFRunLoopStop,
-    },
-    string::CFString,
+use objc2_core_foundation::{
+    kCFAllocatorDefault, kCFRunLoopDefaultMode, CFArray, CFRetained, CFRunLoop, CFString,
+    CFTimeInterval,
 };
-use fsevent_sys as fs;
+#[allow(deprecated)]
+use objc2_core_services::FSEventStreamScheduleWithRunLoop;
+use objc2_core_services::{
+    kFSEventStreamCreateFlagFileEvents, kFSEventStreamCreateFlagNoDefer,
+    kFSEventStreamEventFlagEventIdsWrapped, kFSEventStreamEventFlagHistoryDone,
+    kFSEventStreamEventFlagItemChangeOwner, kFSEventStreamEventFlagItemCloned,
+    kFSEventStreamEventFlagItemCreated, kFSEventStreamEventFlagItemFinderInfoMod,
+    kFSEventStreamEventFlagItemInodeMetaMod, kFSEventStreamEventFlagItemIsDir,
+    kFSEventStreamEventFlagItemIsFile, kFSEventStreamEventFlagItemIsHardlink,
+    kFSEventStreamEventFlagItemIsLastHardlink, kFSEventStreamEventFlagItemIsSymlink,
+    kFSEventStreamEventFlagItemModified, kFSEventStreamEventFlagItemRemoved,
+    kFSEventStreamEventFlagItemRenamed, kFSEventStreamEventFlagItemXattrMod,
+    kFSEventStreamEventFlagKernelDropped, kFSEventStreamEventFlagMount,
+    kFSEventStreamEventFlagMustScanSubDirs, kFSEventStreamEventFlagNone,
+    kFSEventStreamEventFlagOwnEvent, kFSEventStreamEventFlagRootChanged,
+    kFSEventStreamEventFlagUnmount, kFSEventStreamEventFlagUserDropped,
+    kFSEventStreamEventIdSinceNow, ConstFSEventStreamRef, FSEventStreamContext,
+    FSEventStreamCreate, FSEventStreamCreateFlags, FSEventStreamEventFlags, FSEventStreamEventId,
+    FSEventStreamFlushSync, FSEventStreamStart, FSEventStreamStop,
+};
 use std::{
     ffi::CStr,
     fmt::{Display, Formatter},
     os::raw::c_void,
+    ptr::NonNull,
     slice,
     sync::mpsc::Sender,
 };
 
 // Helper to send the runloop from an observer thread.
-struct CFRunLoopSendWrapper(CFRunLoopRef);
+struct CFRunLoopSendWrapper(CFRetained<CFRunLoop>);
 
 // Safety: According to the Apple documentation, it is safe to send CFRef types across threads.
 //
@@ -35,10 +50,10 @@ unsafe impl Send for CFRunLoopSendWrapper {}
 
 pub struct FsEvent {
     paths: Vec<String>,
-    since_when: fs::FSEventStreamEventId,
+    since_when: FSEventStreamEventId,
     latency: CFTimeInterval,
-    flags: fs::FSEventStreamCreateFlags,
-    runloop: Option<CFRunLoopRef>,
+    flags: FSEventStreamCreateFlags,
+    runloop: Option<CFRetained<CFRunLoop>>,
 }
 
 #[derive(Debug)]
@@ -53,30 +68,30 @@ pub struct Event {
 bitflags! {
   #[repr(C)]
   pub struct StreamFlags: u32 {
-    const NONE = 0x00000000;
-    const MUST_SCAN_SUBDIRS = 0x00000001;
-    const USER_DROPPED = 0x00000002;
-    const KERNEL_DROPPED = 0x00000004;
-    const IDS_WRAPPED = 0x00000008;
-    const HISTORY_DONE = 0x00000010;
-    const ROOT_CHANGED = 0x00000020;
-    const MOUNT = 0x00000040;
-    const UNMOUNT = 0x00000080;
-    const ITEM_CREATED = 0x00000100;
-    const ITEM_REMOVED = 0x00000200;
-    const INODE_META_MOD = 0x00000400;
-    const ITEM_RENAMED = 0x00000800;
-    const ITEM_MODIFIED = 0x00001000;
-    const FINDER_INFO_MOD = 0x00002000;
-    const ITEM_CHANGE_OWNER = 0x00004000;
-    const ITEM_XATTR_MOD = 0x00008000;
-    const IS_FILE = 0x00010000;
-    const IS_DIR = 0x00020000;
-    const IS_SYMLINK = 0x00040000;
-    const OWN_EVENT = 0x00080000;
-    const IS_HARDLINK = 0x00100000;
-    const IS_LAST_HARDLINK = 0x00200000;
-    const ITEM_CLONED = 0x400000;
+    const NONE = kFSEventStreamEventFlagNone;
+    const MUST_SCAN_SUBDIRS = kFSEventStreamEventFlagMustScanSubDirs;
+    const USER_DROPPED = kFSEventStreamEventFlagUserDropped;
+    const KERNEL_DROPPED = kFSEventStreamEventFlagKernelDropped;
+    const IDS_WRAPPED = kFSEventStreamEventFlagEventIdsWrapped;
+    const HISTORY_DONE = kFSEventStreamEventFlagHistoryDone;
+    const ROOT_CHANGED = kFSEventStreamEventFlagRootChanged;
+    const MOUNT = kFSEventStreamEventFlagMount;
+    const UNMOUNT = kFSEventStreamEventFlagUnmount;
+    const ITEM_CREATED = kFSEventStreamEventFlagItemCreated;
+    const ITEM_REMOVED = kFSEventStreamEventFlagItemRemoved;
+    const INODE_META_MOD = kFSEventStreamEventFlagItemInodeMetaMod;
+    const ITEM_RENAMED = kFSEventStreamEventFlagItemRenamed;
+    const ITEM_MODIFIED = kFSEventStreamEventFlagItemModified;
+    const FINDER_INFO_MOD = kFSEventStreamEventFlagItemFinderInfoMod;
+    const ITEM_CHANGE_OWNER = kFSEventStreamEventFlagItemChangeOwner;
+    const ITEM_XATTR_MOD = kFSEventStreamEventFlagItemXattrMod;
+    const IS_FILE = kFSEventStreamEventFlagItemIsFile;
+    const IS_DIR = kFSEventStreamEventFlagItemIsDir;
+    const IS_SYMLINK = kFSEventStreamEventFlagItemIsSymlink;
+    const OWN_EVENT = kFSEventStreamEventFlagOwnEvent;
+    const IS_HARDLINK = kFSEventStreamEventFlagItemIsHardlink;
+    const IS_LAST_HARDLINK = kFSEventStreamEventFlagItemIsLastHardlink;
+    const ITEM_CLONED = kFSEventStreamEventFlagItemCloned;
   }
 }
 
@@ -155,14 +170,14 @@ impl Display for StreamFlags {
     }
 }
 
-fn default_stream_context(event_sender: *const Sender<Event>) -> fs::FSEventStreamContext {
+fn default_stream_context(event_sender: *const Sender<Event>) -> FSEventStreamContext {
     let ptr = event_sender as *mut c_void;
-    fs::FSEventStreamContext {
+    FSEventStreamContext {
         version: 0,
         info: ptr,
         retain: None,
         release: None,
-        copy_description: None,
+        copyDescription: None,
     }
 }
 
@@ -189,9 +204,9 @@ impl FsEvent {
     pub fn new(paths: Vec<String>) -> Self {
         Self {
             paths,
-            since_when: fs::kFSEventStreamEventIdSinceNow,
+            since_when: kFSEventStreamEventIdSinceNow,
             latency: 0.0,
-            flags: fs::kFSEventStreamCreateFlagFileEvents | fs::kFSEventStreamCreateFlagNoDefer,
+            flags: kFSEventStreamCreateFlagFileEvents | kFSEventStreamCreateFlagNoDefer,
             runloop: None,
         }
     }
@@ -202,48 +217,49 @@ impl FsEvent {
         Ok(())
     }
 
-    fn build_native_paths(&self) -> CFArray<CFString> {
-        let paths: Vec<_> = self.paths.iter().map(|x| CFString::new(x)).collect();
-        CFArray::from_CFTypes(&paths)
+    fn build_native_paths(&self) -> CFRetained<CFArray<CFString>> {
+        let paths: Vec<_> = self.paths.iter().map(|x| CFString::from_str(x)).collect();
+        CFArray::from_retained_objects(&paths)
     }
 
     fn internal_observe(
-        since_when: fs::FSEventStreamEventId,
+        since_when: FSEventStreamEventId,
         latency: CFTimeInterval,
-        flags: fs::FSEventStreamCreateFlags,
-        paths: CFArray<CFString>,
+        flags: FSEventStreamCreateFlags,
+        paths: &CFArray<CFString>,
         event_sender: Sender<Event>,
         runloop_sender: Option<Sender<CFRunLoopSendWrapper>>,
     ) -> Result<()> {
         let stream_context = default_stream_context(&event_sender);
 
         unsafe {
-            let stream = fs::FSEventStreamCreate(
+            let stream = FSEventStreamCreate(
                 kCFAllocatorDefault,
-                callback,
-                &stream_context,
-                paths.as_concrete_TypeRef() as _,
+                Some(callback),
+                &stream_context as *const _ as *mut _,
+                paths.as_opaque(),
                 since_when,
                 latency,
                 flags,
             );
 
             if let Some(ret_tx) = runloop_sender {
-                let runloop = CFRunLoopSendWrapper(CFRunLoopGetCurrent());
+                let runloop = CFRunLoopSendWrapper(CFRunLoop::current().unwrap());
                 ret_tx.send(runloop).expect("unabe to send CFRunLoopRef");
             }
 
-            fs::FSEventStreamScheduleWithRunLoop(
+            #[allow(deprecated)]
+            FSEventStreamScheduleWithRunLoop(
                 stream,
-                CFRunLoopGetCurrent(),
-                kCFRunLoopDefaultMode,
+                &CFRunLoop::current().unwrap(),
+                kCFRunLoopDefaultMode.unwrap(),
             );
 
-            fs::FSEventStreamStart(stream);
-            CFRunLoopRun();
+            FSEventStreamStart(stream);
+            CFRunLoop::run();
 
-            fs::FSEventStreamFlushSync(stream);
-            fs::FSEventStreamStop(stream);
+            FSEventStreamFlushSync(stream);
+            FSEventStreamStop(stream);
         }
 
         Ok(())
@@ -255,7 +271,7 @@ impl FsEvent {
             self.since_when,
             self.latency,
             self.flags,
-            native_paths,
+            &native_paths,
             event_sender,
             None,
         )
@@ -266,7 +282,7 @@ impl FsEvent {
         let (ret_tx, ret_rx) = std::sync::mpsc::channel();
         let native_paths = self.build_native_paths();
 
-        struct CFMutableArraySendWrapper(CFArray<CFString>);
+        struct CFMutableArraySendWrapper(CFRetained<CFArray<CFString>>);
 
         // Safety
         // - See comment on `CFRunLoopSendWrapper
@@ -282,7 +298,7 @@ impl FsEvent {
                 since_when,
                 latency,
                 flags,
-                paths.0,
+                &paths.0,
                 event_sender,
                 Some(ret_tx),
             )
@@ -296,24 +312,23 @@ impl FsEvent {
     // Shut down the event stream.
     pub fn shutdown_observe(&mut self) {
         if let Some(runloop) = self.runloop.take() {
-            unsafe {
-                CFRunLoopStop(runloop);
-            }
+            runloop.stop();
         }
     }
 }
 
-extern "C" fn callback(
-    _stream_ref: fs::FSEventStreamRef,
+unsafe extern "C-unwind" fn callback(
+    _stream_ref: ConstFSEventStreamRef,
     info: *mut c_void,
-    num_events: usize,                               // size_t numEvents
-    event_paths: *mut c_void,                        // void *eventPaths
-    event_flags: *const fs::FSEventStreamEventFlags, // const FSEventStreamEventFlags eventFlags[]
-    event_ids: *const fs::FSEventStreamEventId,      // const FSEventStreamEventId eventIds[]
+    num_events: usize,                             // size_t numEvents
+    event_paths: NonNull<c_void>,                  // void *eventPaths
+    event_flags: NonNull<FSEventStreamEventFlags>, // const FSEventStreamEventFlags eventFlags[]
+    event_ids: NonNull<FSEventStreamEventId>,      // const FSEventStreamEventId eventIds[]
 ) {
-    let event_paths = unsafe { slice::from_raw_parts(event_paths as *const *const i8, num_events) };
-    let event_flags = unsafe { slice::from_raw_parts(event_flags, num_events) };
-    let event_ids = unsafe { slice::from_raw_parts(event_ids, num_events) };
+    let event_paths =
+        unsafe { slice::from_raw_parts(event_paths.as_ptr() as *const *const i8, num_events) };
+    let event_flags = unsafe { slice::from_raw_parts(event_flags.as_ptr(), num_events) };
+    let event_ids = unsafe { slice::from_raw_parts(event_ids.as_ptr(), num_events) };
     let sender = unsafe {
         (info as *mut Sender<Event>)
             .as_mut()

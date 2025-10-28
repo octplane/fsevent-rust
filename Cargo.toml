@@ -2,7 +2,7 @@
 
 name = "fsevent"
 version = "2.2.0"
-authors = [ "Pierre Baillet <pierre@baillet.name>" ]
+authors = ["Pierre Baillet <pierre@baillet.name>"]
 description = "Rust bindings to the fsevent-sys macOS API for file changes notifications"
 license = "MIT"
 repository = "https://github.com/octplane/fsevent-rust"
@@ -10,9 +10,17 @@ edition = "2018"
 
 [dependencies]
 bitflags = "1"
-fsevent-sys = "5.1.0"
-# fsevent-sys = { path = "fsevent-sys" }
-core-foundation = "0.10.1"
+objc2-core-foundation = { version = "0.3.2", default-features = false, features = [
+    "std",
+    "CFString",
+    "CFRunLoop",
+    "CFArray",
+    "CFDate",
+] }
+objc2-core-services = { version = "0.3.2", default-features = false, features = [
+    "std",
+    "FSEvents",
+] }
 
 [dev-dependencies]
 tempfile = "3"

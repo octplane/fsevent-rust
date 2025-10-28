@@ -1,7 +1,7 @@
 #![cfg(target_os = "macos")]
 
-use core_foundation::runloop::{CFRunLoopGetCurrent, CFRunLoopRef, CFRunLoopStop};
 use fsevent::*;
+use objc2_core_foundation::{CFRetained, CFRunLoop};
 use std::{
     fs,
     fs::{read_link, OpenOptions},
@@ -13,7 +13,7 @@ use std::{
 };
 
 // Helper to send the runloop from an observer thread.
-struct CFRunLoopSendWrapper(CFRunLoopRef);
+struct CFRunLoopSendWrapper(CFRetained<CFRunLoop>);
 
 // Safety: According to the Apple documentation, it is safe to send CFRef types across threads.
 //
@@ -121,7 +121,7 @@ fn internal_observe_folder(run_async: bool) {
         let (tx, rx) = std::sync::mpsc::channel();
         let dst_clone = dst.clone();
         let observe_thread = thread::spawn(move || {
-            let runloop = unsafe { CFRunLoopGetCurrent() };
+            let runloop = CFRunLoop::current().unwrap();
             tx.send(CFRunLoopSendWrapper(runloop)).unwrap();
 
             let mut fsevent = fsevent::FsEvent::new(vec![]);
@@ -163,9 +163,7 @@ fn internal_observe_folder(run_async: bool) {
     );
 
     if let Some((runloop, thread)) = runloop_and_thread {
-        unsafe {
-            CFRunLoopStop(runloop);
-        }
+        runloop.stop();
 
         thread.join().unwrap();
     } else {
@@ -204,7 +202,7 @@ fn internal_validate_watch_single_file(run_async: bool) {
         let dir_path_clone = dir_path.clone();
 
         let observe_thread = thread::spawn(move || {
-            let runloop = unsafe { CFRunLoopGetCurrent() };
+            let runloop = CFRunLoop::current().unwrap();
             tx.send(CFRunLoopSendWrapper(runloop)).unwrap();
 
             let mut fsevent = fsevent::FsEvent::new(vec![]);
@@ -257,9 +255,7 @@ fn internal_validate_watch_single_file(run_async: bool) {
     );
 
     if let Some((runloop, observe_thread)) = runloop_and_thread {
-        unsafe {
-            CFRunLoopStop(runloop);
-        }
+        runloop.stop();
 
         observe_thread.join().unwrap();
     } else {
