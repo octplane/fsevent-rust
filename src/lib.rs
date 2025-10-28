@@ -16,7 +16,13 @@ use core_foundation::{
     },
     string::CFString,
 };
-use fsevent_sys as fs;
+use fsevent_sys::{
+    kFSEventStreamCreateFlagFileEvents, kFSEventStreamCreateFlagNoDefer,
+    kFSEventStreamEventIdSinceNow, FSEventStreamContext, FSEventStreamCreate,
+    FSEventStreamCreateFlags, FSEventStreamEventFlags, FSEventStreamEventId,
+    FSEventStreamFlushSync, FSEventStreamRef, FSEventStreamScheduleWithRunLoop, FSEventStreamStart,
+    FSEventStreamStop,
+};
 use std::{
     ffi::CStr,
     fmt::{Display, Formatter},
@@ -35,9 +41,9 @@ unsafe impl Send for CFRunLoopSendWrapper {}
 
 pub struct FsEvent {
     paths: Vec<String>,
-    since_when: fs::FSEventStreamEventId,
+    since_when: FSEventStreamEventId,
     latency: CFTimeInterval,
-    flags: fs::FSEventStreamCreateFlags,
+    flags: FSEventStreamCreateFlags,
     runloop: Option<CFRunLoopRef>,
 }
 
@@ -155,9 +161,9 @@ impl Display for StreamFlags {
     }
 }
 
-fn default_stream_context(event_sender: *const Sender<Event>) -> fs::FSEventStreamContext {
+fn default_stream_context(event_sender: *const Sender<Event>) -> FSEventStreamContext {
     let ptr = event_sender as *mut c_void;
-    fs::FSEventStreamContext {
+    FSEventStreamContext {
         version: 0,
         info: ptr,
         retain: None,
@@ -189,9 +195,9 @@ impl FsEvent {
     pub fn new(paths: Vec<String>) -> Self {
         Self {
             paths,
-            since_when: fs::kFSEventStreamEventIdSinceNow,
+            since_when: kFSEventStreamEventIdSinceNow,
             latency: 0.0,
-            flags: fs::kFSEventStreamCreateFlagFileEvents | fs::kFSEventStreamCreateFlagNoDefer,
+            flags: kFSEventStreamCreateFlagFileEvents | kFSEventStreamCreateFlagNoDefer,
             runloop: None,
         }
     }
@@ -208,9 +214,9 @@ impl FsEvent {
     }
 
     fn internal_observe(
-        since_when: fs::FSEventStreamEventId,
+        since_when: FSEventStreamEventId,
         latency: CFTimeInterval,
-        flags: fs::FSEventStreamCreateFlags,
+        flags: FSEventStreamCreateFlags,
         paths: CFArray<CFString>,
         event_sender: Sender<Event>,
         runloop_sender: Option<Sender<CFRunLoopSendWrapper>>,
@@ -218,7 +224,7 @@ impl FsEvent {
         let stream_context = default_stream_context(&event_sender);
 
         unsafe {
-            let stream = fs::FSEventStreamCreate(
+            let stream = FSEventStreamCreate(
                 kCFAllocatorDefault,
                 callback,
                 &stream_context,
@@ -233,17 +239,13 @@ impl FsEvent {
                 ret_tx.send(runloop).expect("unabe to send CFRunLoopRef");
             }
 
-            fs::FSEventStreamScheduleWithRunLoop(
-                stream,
-                CFRunLoopGetCurrent(),
-                kCFRunLoopDefaultMode,
-            );
+            FSEventStreamScheduleWithRunLoop(stream, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
 
-            fs::FSEventStreamStart(stream);
+            FSEventStreamStart(stream);
             CFRunLoopRun();
 
-            fs::FSEventStreamFlushSync(stream);
-            fs::FSEventStreamStop(stream);
+            FSEventStreamFlushSync(stream);
+            FSEventStreamStop(stream);
         }
 
         Ok(())
@@ -304,12 +306,12 @@ impl FsEvent {
 }
 
 extern "C" fn callback(
-    _stream_ref: fs::FSEventStreamRef,
+    _stream_ref: FSEventStreamRef,
     info: *mut c_void,
-    num_events: usize,                               // size_t numEvents
-    event_paths: *mut c_void,                        // void *eventPaths
-    event_flags: *const fs::FSEventStreamEventFlags, // const FSEventStreamEventFlags eventFlags[]
-    event_ids: *const fs::FSEventStreamEventId,      // const FSEventStreamEventId eventIds[]
+    num_events: usize,                           // size_t numEvents
+    event_paths: *mut c_void,                    // void *eventPaths
+    event_flags: *const FSEventStreamEventFlags, // const FSEventStreamEventFlags eventFlags[]
+    event_ids: *const FSEventStreamEventId,      // const FSEventStreamEventId eventIds[]
 ) {
     let event_paths = unsafe { slice::from_raw_parts(event_paths as *const *const i8, num_events) };
     let event_flags = unsafe { slice::from_raw_parts(event_flags, num_events) };
