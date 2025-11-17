@@ -62,3 +62,4 @@ Please ensure:
 - Simon [simonchatts](https://github.com/simonchatts)
 - Erick Tryzelaar [erickt](https://github.com/erickt)
 - Donough Liu [ldm0](https://github.com/ldm0)
+- Mads Marquart [madsmtm](https://github.com/madsmtm)
