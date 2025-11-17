@@ -1,6 +1,6 @@
 [package]
 name = "fsevent-sys"
-version = "5.1.0"
+version = "5.2.0"
 authors = ["Pierre Baillet <pierre@baillet.name>"]
 description = "Rust bindings to the fsevent macOS API for file changes notifications"
 license = "MIT"
